@@ -1,16 +1,17 @@
-/* sw.js */
-const CACHE = "bilbo-pro-v3";
+/* SW ENTRENAMIENTO APP */
+const CACHE = "bilbo-pro-v4";   // cambia versión cuando actualices
+const APP_SCOPE = "/entreno-app/"; // repo GitHub Pages
 
-// OJO: rutas relativas al scope /entreno-app/
 const ASSETS = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./sw.js"
+  APP_SCOPE,
+  APP_SCOPE + "index.html",
+  APP_SCOPE + "manifest.webmanifest",
+  APP_SCOPE + "icon-192.png",
+  APP_SCOPE + "icon-512.png"
 ];
 
+
+// INSTALAR
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.addAll(ASSETS))
@@ -18,64 +19,68 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
+
+// ACTIVAR
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-// Permite actualizar desde la app (postMessage)
+
+// ACTUALIZAR DESDE APP
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
-// Network-first para HTML (mejor cuando hay datos)
-// Cache-first para el resto
+
+// FETCH
 self.addEventListener("fetch", (event) => {
+
   const req = event.request;
+
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
 
-  // Solo mismo origen
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== location.origin) return;
 
   const accept = req.headers.get("accept") || "";
 
-  // 1) Navegación / HTML -> network-first con fallback cache
+  // HTML → network first
   if (req.mode === "navigate" || accept.includes("text/html")) {
     event.respondWith(
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(req, copy));
+          caches.open(CACHE).then(c => c.put(req, copy));
           return res;
         })
         .catch(async () => {
           const cached = await caches.match(req);
-          return cached || caches.match("./index.html");
+          return cached || caches.match(APP_SCOPE + "index.html");
         })
     );
     return;
   }
 
-  // 2) Resto -> cache-first con actualización en segundo plano
+  // resto → cache first
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
 
-      return fetch(req)
-        .then((res) => {
-          if (res && res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then((cache) => cache.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match("./index.html"));
+      return fetch(req).then((res) => {
+        if (!res || res.status !== 200) return res;
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy));
+        return res;
+      }).catch(() => caches.match(APP_SCOPE + "index.html"));
     })
   );
+
 });
