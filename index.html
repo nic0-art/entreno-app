@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>Entreno App</title>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="theme-color" content="#00ff9c">
+
+<style>
+  *{ box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; }
+  body{ margin:0; background:#050a08; color:#d7ffe9; }
+  .app{ max-width:420px; margin:auto; min-height:100vh; display:flex; flex-direction:column; padding:14px; }
+
+  .header{ text-align:center; margin-bottom:12px; }
+  .header h1{ margin:6px 0 2px; color:#00ff9c; }
+  .header p{ margin:0; font-size:13px; opacity:.75; }
+
+  .status-box{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
+  .status{ flex:1; padding:6px; border-radius:10px; text-align:center; font-size:11px; border:1px solid rgba(0,255,160,.25); }
+  .green{ color:#00ff9c } .yellow{ color:#ffd000 }
+
+  .btn{
+    width:100%; padding:12px; border-radius:14px;
+    background:rgba(0,0,0,.4);
+    border:1px solid rgba(0,255,160,.25);
+    color:#d7ffe9; margin-bottom:10px; font-weight:600;
+  }
+  .btn-main{ background:rgba(0,255,160,.12); border:1px solid #00ff9c; }
+
+  .panel{
+    margin-top:12px; padding:12px; border-radius:14px;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(0,255,160,.2);
+  }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  .nav{
+    margin-top:auto; display:flex; justify-content:space-around;
+    padding:10px 0; border-top:1px solid rgba(0,255,160,.2);
+    gap:4px;
+    flex-wrap:wrap;
+  }
+  .nav button{ background:none; border:none; color:#aaa; font-size:12px; padding:6px 4px; }
+  .nav button.active{ color:#00ff9c; font-weight:bold; }
+
+  .log-card{
+    padding:10px; border-radius:12px;
+    background:rgba(0,0,0,.30);
+    border:1px solid rgba(0,255,160,.15);
+    margin:10px 0;
+    white-space:pre-wrap;
+  }
+  .log-meta{ opacity:.75; font-size:12px; }
+
+  .row{ display:flex; gap:10px; }
+  .row .btn{ width:auto; flex:1; margin-bottom:0; }
+
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+  .field span{ font-size:12px; opacity:.8; }
+  .field input, .field select{
+    padding:12px; border-radius:14px;
+    background:rgba(0,0,0,.4);
+    border:1px solid rgba(0,255,160,.25);
+    color:#d7ffe9; outline:none;
+  }
+  .field input:focus, .field select:focus{ border-color:#00ff9c; }
+
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.65);
+    display:none; align-items:flex-end; justify-content:center;
+    padding:14px; z-index:9999;
+  }
+  .modal-backdrop.show{ display:flex; }
+
+  .modal{
+    width:100%; max-width:420px; background:#050a08;
+    border:1px solid rgba(0,255,160,.25);
+    border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.6);
+    overflow:hidden; transform:translateY(10px);
+  }
+
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 12px 10px; border-bottom:1px solid rgba(0,255,160,.15);
+  }
+  .modal-title{ font-weight:800; color:#00ff9c; letter-spacing:.5px; }
+  .modal-close{
+    background:transparent; border:1px solid rgba(0,255,160,.25);
+    color:#d7ffe9; border-radius:12px; padding:6px 10px;
+  }
+  .modal-body{ padding:12px; }
+  .modal-actions{
+    display:flex; gap:10px; padding:12px;
+    border-top:1px solid rgba(0,255,160,.15);
+  }
+  .modal-actions .btn{ flex:1; margin:0; }
+
+  .toast{
+    position:fixed; left:50%; bottom:78px; transform:translateX(-50%);
+    background:rgba(0,0,0,.85);
+    border:1px solid rgba(0,255,160,.25);
+    color:#d7ffe9; padding:10px 14px; border-radius:14px;
+    z-index:10000; display:none;
+  }
+
+  .mini-actions{ display:flex; gap:8px; margin-top:10px; }
+  .mini{
+    flex:1; padding:10px; border-radius:12px;
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(0,255,160,.18);
+    color:#d7ffe9; font-weight:600;
+  }
+  .mini.danger{ border-color:rgba(255,80,80,.6); }
+
+  .kpi-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
+  .kpi{
+    padding:10px; border-radius:12px;
+    background:rgba(0,0,0,.28);
+    border:1px solid rgba(0,255,160,.12);
+  }
+  .kpi .k{ font-size:12px; opacity:.8; }
+  .kpi .v{ font-size:18px; font-weight:800; margin-top:4px; color:#00ff9c; }
+
+  .table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
+  .table th, .table td{
+    border-bottom:1px solid rgba(0,255,160,.12);
+    padding:8px 6px;
+    text-align:left;
+    vertical-align:top;
+  }
+  .table th{ color:#00ff9c; font-weight:800; }
+  .pill{
+    display:inline-block; padding:4px 8px; border-radius:999px;
+    border:1px solid rgba(0,255,160,.2);
+    background:rgba(0,255,160,.08);
+    font-size:11px; opacity:.95;
+  }
+  .muted{ opacity:.75; }
+
+  .banner{
+    margin-top:12px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(0,255,160,.18);
+    background:rgba(0,255,160,.06);
+  }
+  .banner .t{ color:#00ff9c; font-weight:800; margin-bottom:4px; }
+  .banner .s{ font-size:12px; opacity:.85; line-height:1.3; }
+
+  /* Botón instalar oculto por defecto */
+  #installBtnMission, #installBtnSettings { display:none; }
+
+  .week-grid{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap:8px;
+    margin-top:10px;
+  }
+  .day{
+    padding:10px 6px;
+    border-radius:12px;
+    background:rgba(0,0,0,.25);
+    border:1px solid rgba(0,255,160,.12);
+    text-align:center;
+    min-height:64px;
+  }
+  .day .d{ font-weight:800; color:#00ff9c; font-size:12px; }
+  .day .n{ font-size:12px; margin-top:6px; }
+  .day .m{ font-size:11px; opacity:.75; margin-top:4px; }
+  .day.done{
+    border-color: rgba(0,255,160,.35);
+    background: rgba(0,255,160,.08);
+  }
+  .day.today{
+    outline:2px solid rgba(255,208,0,.55);
+  }
+  .chip{
+    display:inline-block; margin-top:6px;
+    font-size:10px; padding:3px 6px;
+    border-radius:999px;
+    border:1px solid rgba(0,255,160,.22);
+    background:rgba(0,255,160,.08);
+  }
+</style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>Entreno App</h1>
+      <p>INTERFAZ TÁCTICA · MODO OPERATIVO</p>
+    </div>
+
+    <div class="status-box">
+      <div class="status green">● STATUS: OK</div>
+      <div class="status yellow">● OBJETIVO: FUERZA MAGRA</div>
+      <div class="status green">● SYNC: CAPACITOR</div>
+    </div>
+
+    <div id="screen-mision" class="screen active">
+      <button class="btn btn-main" onclick="iniciarMision()">INICIAR MISIÓN</button>
+      <button class="btn" onclick="abrirEntreno()">ABRIR ENTRENAMIENTO HOY</button>
+      <button class="btn" onclick="registrarSerie()">REGISTRAR SERIE</button>
+
+      <button id="installBtnMission" class="btn btn-main" onclick="instalarApp()">INSTALAR APP</button>
+
+      <div class="banner" id="reminderBanner" style="display:none;">
+        <div class="t">RECORDATORIO</div>
+        <div class="s" id="reminderText"></div>
+      </div>
+
+      <div class="panel">
+        <h3>ÓRDENES DEL DÍA</h3>
+        <p>Antebrazo · Gemelo · Cuello (prioridad)</p>
+        <div class="log-meta" id="phaseHint"></div>
+      </div>
+    </div>
+
+    <div id="screen-entreno" class="screen">
+      <div class="panel">
+        <h3>ENTRENO DE HOY</h3>
+        <div id="workoutBox" class="log-card"></div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">CALENDARIO (MANUAL)</h3>
+          <p class="log-meta" style="margin:0 0 10px;">
+            Si hoy no toca el día correcto, selecciónalo aquí (solo afecta a HOY).
+          </p>
+
+          <label class="field">
+            <span>Día de rutina para hoy</span>
+            <select id="dayOverrideSelect">
+              <option value="">Automático (por día semana)</option>
+              <option value="D1">D1 · Empuje + Gemelo</option>
+              <option value="D2">D2 · Tirón + Antebrazo</option>
+              <option value="D3">D3 · Pierna sin carga axial</option>
+              <option value="D4">D4 · Full suave + Cuello</option>
+            </select>
+          </label>
+
+          <div class="row" style="margin-bottom:10px;">
+            <button class="btn btn-main" onclick="guardarOverrideHoy()">Guardar</button>
+            <button class="btn" onclick="borrarOverrideHoy()">Quitar</button>
+          </div>
+
+          <div class="log-meta" id="overrideHint"></div>
+        </div>
+
+        <label class="field" style="margin-top:10px;">
+          <span>Ejercicio a registrar</span>
+          <input id="quickExercise" type="text" placeholder="Ej: Prensa inclinada" />
+        </label>
+
+        <button class="btn btn-main" onclick="registrarSerieDesdeEntreno()">REGISTRAR SERIE (ENTRENO)</button>
+        <button class="btn" onclick="registrarSerie()">REGISTRAR SERIE (VACÍO)</button>
+      </div>
+    </div>
+
+    <div id="screen-log" class="screen">
+      <div class="panel">
+        <h3>HISTORIAL DE SERIES</h3>
+        <p id="logEmptyHint" class="log-meta">Sin registros aún. Pulsa “REGISTRAR SERIE”.</p>
+
+        <div class="row" style="margin:10px 0;">
+          <button class="btn" style="border-color: rgba(255,80,80,.6);" onclick="borrarHistorial()">Borrar historial</button>
+          <button class="btn" onclick="exportarCSV()">Exportar CSV</button>
+        </div>
+
+        <div id="logList"></div>
+      </div>
+    </div>
+
+    <div id="screen-nivel" class="screen">
+      <div class="panel">
+        <h3>NIVEL + ESTADÍSTICAS</h3>
+        <div id="nivelBox" class="log-card"></div>
+
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">PRs e1RM (estimado)</h3>
+          <div class="log-meta">Cálculo e1RM: <span class="pill">Epley</span> (peso × (1 + reps/30))</div>
+          <div id="prBox"></div>
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">Top ejercicios (últimos 28 días)</h3>
+          <div class="log-meta">Series y tonelaje (peso×reps). Si no pones peso, no suma tonelaje.</div>
+          <div id="topBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-stats" class="screen">
+      <div class="panel">
+        <h3>STATS PRO</h3>
+        <div class="log-meta" id="statsMeta"></div>
+
+        <div class="kpi-grid" id="statsKpis"></div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">Prioridades (últimos 28 días)</h3>
+          <div class="log-meta">Series y volumen estimado (si hay peso). Clasificación por nombre del ejercicio.</div>
+          <div id="prioBox"></div>
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">Volumen semanal (últimas 8 semanas)</h3>
+          <div class="log-meta">Tonnage = peso×reps. Si faltan pesos, solo cuenta series.</div>
+          <div id="weeklyBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-cal" class="screen">
+      <div class="panel">
+        <h3>CALENDARIO</h3>
+        <div class="log-meta" id="calMeta"></div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" onclick="calPrevWeek()">◀ Semana</button>
+          <button class="btn btn-main" onclick="calThisWeek()">Hoy</button>
+          <button class="btn" onclick="calNextWeek()">Semana ▶</button>
+        </div>
+
+        <div class="week-grid" id="weekGrid"></div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">Últimas 4 semanas</h3>
+          <div class="log-meta">Marca días con entreno. Abre LOG para ver detalles.</div>
+          <div id="last4Box"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-ajustes" class="screen">
+      <div class="panel">
+        <h3>AJUSTES</h3>
+
+        <button id="installBtnSettings" class="btn btn-main" onclick="instalarApp()">INSTALAR APP</button>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">Fases (perfil de entrenamiento)</h3>
+          <div class="log-meta">Cada serie se guarda dentro de la fase activa.</div>
+
+          <label class="field" style="margin-top:10px;">
+            <span>Fase activa</span>
+            <select id="phaseSelect"></select>
+          </label>
+
+          <div class="row" style="margin-top:8px;">
+            <button class="btn btn-main" onclick="setActivePhaseFromUI()">Aplicar</button>
+            <button class="btn" onclick="crearFase()">Nueva fase</button>
+          </div>
+
+          <button class="btn" style="margin-top:10px; border-color: rgba(255,80,80,.6);" onclick="borrarFaseActiva()">Borrar fase activa</button>
+          <div class="log-meta" style="margin-top:10px;">*No se recomienda borrar si ya tiene datos.</div>
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">Backup / Restaurar</h3>
+          <div class="log-meta">Exporta todo (log + fases + ajustes) en un JSON.</div>
+
+          <div class="row" style="margin-top:10px;">
+            <button class="btn btn-main" onclick="exportarBackup()">Exportar backup</button>
+            <button class="btn" onclick="clickImport()">Importar backup</button>
+          </div>
+
+          <div class="log-meta" style="margin-top:10px;">
+            Importar por defecto <span class="pill">sobrescribe</span> lo actual.
+          </div>
+
+          <input id="importFile" type="file" accept="application/json" style="display:none;" />
+        </div>
+
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">PWA / Actualizaciones</h3>
+          <div class="log-meta" id="pwaStatus">Estado: comprobando…</div>
+
+          <div class="row" style="margin-top:10px;">
+            <button class="btn btn-main" onclick="actualizarApp()">Actualizar app (cache)</button>
+            <button class="btn" onclick="verVersion()">Ver versión</button>
+          </div>
+
+          <div class="log-meta" style="margin-top:10px;">
+            Si no ves cambios, cierra la app (multitarea) y abre de nuevo.
+          </div>
+        </div>
+
+        <button class="btn" style="margin-top:10px;" onclick="resetearMision()">Resetear misión</button>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="active" data-screen="mision">MISIÓN</button>
+      <button data-screen="entreno">ENTRENO</button>
+      <button data-screen="log">LOG</button>
+      <button data-screen="nivel">NIVEL</button>
+      <button data-screen="stats">STATS</button>
+      <button data-screen="cal">CAL</button>
+      <button data-screen="ajustes">AJUSTES</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL ===== -->
+  <div id="modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Registrar serie">
+      <div class="modal-head">
+        <div id="modalTitle" class="modal-title">REGISTRAR SERIE</div>
+        <button class="modal-close" id="modalClose" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="field">
+          <span>Ejercicio</span>
+          <input id="mEjercicio" type="text" placeholder="Ej: Prensa inclinada" />
+        </label>
+
+        <div class="row">
+          <label class="field" style="flex:1;">
+            <span>Peso (kg)</span>
+            <input id="mPeso" type="number" inputmode="decimal" placeholder="0" />
+          </label>
+          <label class="field" style="flex:1;">
+            <span>Reps</span>
+            <input id="mReps" type="number" inputmode="numeric" placeholder="0" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field" style="flex:1;">
+            <span>Serie nº</span>
+            <input id="mSerie" type="number" inputmode="numeric" placeholder="1" />
+          </label>
+          <label class="field" style="flex:1;">
+            <span>RPE (opcional)</span>
+            <input id="mRpe" type="number" inputmode="decimal" placeholder="8" step="0.5" min="0" max="10" />
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn" id="modalCancel">Cancelar</button>
+        <button class="btn btn-main" id="modalSave">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+<script>
+/* =========================
+   VERSIONES
+========================= */
+const APP_VERSION = "BilboPro-PWA 1.3.0";
+const CACHE_VERSION = "bilbo-pro-v3"; // debe coincidir con sw.js
+
+/* =========================
+   INSTALL: beforeinstallprompt
+========================= */
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+
+  const b1 = document.getElementById("installBtnMission");
+  const b2 = document.getElementById("installBtnSettings");
+  if(b1) b1.style.display = "block";
+  if(b2) b2.style.display = "block";
+
+  showToast("📲 App lista para instalar");
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  const b1 = document.getElementById("installBtnMission");
+  const b2 = document.getElementById("installBtnSettings");
+  if(b1) b1.style.display = "none";
+  if(b2) b2.style.display = "none";
+  showToast("✅ App instalada");
+});
+
+async function instalarApp(){
+  if(!deferredInstallPrompt){
+    showToast("ℹ️ Menú ⋮ → Instalar / Añadir a pantalla.");
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const res = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+
+  if(res && res.outcome === "accepted") showToast("✅ Instalación aceptada");
+  else showToast("❌ Instalación cancelada");
+}
+
+/* =========================
+   HELPERS
+========================= */
+function showToast(msg){
+  const t = document.getElementById("toast");
+  if(!t) return;
+  t.textContent = msg;
+  t.style.display = "block";
+  setTimeout(()=> t.style.display="none", 1400);
+}
+function uid(){
+  try { return crypto.randomUUID(); }
+  catch(e){ return String(Date.now()) + "_" + Math.random().toString(16).slice(2); }
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function toNum(v){
+  const n = Number(String(v ?? "").replace(",", "."));
+  return Number.isFinite(n) ? n : NaN;
+}
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function startOfWeekISO(date = new Date()){
+  const d = new Date(date);
+  const day = (d.getDay() + 6) % 7; // 0=lunes
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - day);
+  return d;
+}
+function addDays(date, days){
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+function iso(d){ return d.toISOString().slice(0,10); }
+function fmtShort(isoDate){
+  const [y,m,d] = isoDate.split("-");
+  return `${d}/${m}`;
+}
+
+/* =========================
+   NAV + PANTALLAS
+========================= */
+const screens = {
+  mision: document.getElementById("screen-mision"),
+  entreno: document.getElementById("screen-entreno"),
+  log: document.getElementById("screen-log"),
+  nivel: document.getElementById("screen-nivel"),
+  stats: document.getElementById("screen-stats"),
+  cal: document.getElementById("screen-cal"),
+  ajustes: document.getElementById("screen-ajustes")
+};
+
+function showScreen(key){
+  Object.values(screens).forEach(s=>s.classList.remove("active"));
+  if(screens[key]) screens[key].classList.add("active");
+}
+function setActiveNav(key){
+  document.querySelectorAll(".nav button").forEach(b=>{
+    b.classList.toggle("active", b.getAttribute("data-screen") === key);
+  });
+}
+
+document.querySelectorAll(".nav button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const key = btn.getAttribute("data-screen");
+    setActiveNav(key);
+    showScreen(key);
+
+    if(key==="log") renderLog();
+    if(key==="nivel") renderNivel();
+    if(key==="stats") renderStats();
+    if(key==="cal") renderCalendar();
+    if(key==="entreno") renderWorkoutToday();
+    if(key==="ajustes"){ refreshPwaStatus(); renderPhasesUI(); }
+  });
+});
+
+/* =========================
+   BILBO PRO 4D
+========================= */
+const splitDays = [
+  { key:"D1", name:"D1 · Empuje + Gemelo", focus:"Pecho/Hombro/Tríceps + Gemelo (prioridad)" },
+  { key:"D2", name:"D2 · Tirón + Antebrazo", focus:"Espalda sin lumbar + Antebrazo (prioridad)" },
+  { key:"D3", name:"D3 · Pierna sin carga axial", focus:"Prensa + Femoral + Hip Thrust + Gemelo (prioridad)" },
+  { key:"D4", name:"D4 · Full suave + Cuello", focus:"Full suave + Core + Cuello (prioridad)" }
+];
+
+const blocks = {
+  D1: [
+    "EJ PRINCIPAL: Press pecho máquina/mancuernas · 4×6–8",
+    "Accesorio: Elevaciones laterales · 3×10–12",
+    "Accesorio: Fondos/Tríceps polea · 3×8–12",
+    "PRIORIDAD: Gemelo sentado · 5×12–20"
+  ],
+  D2: [
+    "EJ PRINCIPAL: Remo con pecho apoyado · 4×6–8 (sin lumbar)",
+    "Accesorio: Jalón al pecho · 3×8–10",
+    "Accesorio: Curl bíceps · 3×10–12",
+    "PRIORIDAD: Antebrazo (curl muñeca + reverse curl) · 5×12–20"
+  ],
+  D3: [
+    "EJ PRINCIPAL: Prensa inclinada · 5×8–12",
+    "Accesorio: Curl femoral · 4×10–12",
+    "Sustituto PM: Hip Thrust · 4×8–12",
+    "PRIORIDAD: Gemelo de pie · 5×12–20",
+    "Opcional: Step-ups / Hack squat máquina · 2–3×8–12"
+  ],
+  D4: [
+    "Bilbo suave: Press inclinado ligero · 3×8–10",
+    "Accesorio: Remo ligero · 3×8–10",
+    "Core: plancha/antirotación · 4×30–45s",
+    "PRIORIDAD: Cuello (flex/ext/lat) · 5×15–20"
+  ]
+};
+
+function dayIndexFromWeek(){
+  const dow = new Date().getDay();
+  const map = {1:0,2:1,3:2,4:3,5:4,6:5,0:6};
+  return map[dow];
+}
+
+/* ===== Override manual hoy ===== */
+const LS_DAY_OVERRIDE = "bilbo_day_override_v1";
+function getDayOverrideForToday(){
+  try{
+    const obj = JSON.parse(localStorage.getItem(LS_DAY_OVERRIDE) || "null");
+    if(obj && obj.date === todayISO() && obj.key) return obj.key;
+  }catch(e){}
+  return "";
+}
+function setDayOverrideForToday(key){
+  localStorage.setItem(LS_DAY_OVERRIDE, JSON.stringify({ date: todayISO(), key }));
+}
+function clearDayOverride(){ localStorage.removeItem(LS_DAY_OVERRIDE); }
+
+function workoutToday(){
+  const overrideKey = getDayOverrideForToday();
+  if(overrideKey){
+    const day = splitDays.find(d=>d.key===overrideKey) || splitDays[0];
+    return { ...day, date: todayISO(), override:true };
+  }
+  const idx = dayIndexFromWeek();
+  const plan = ["D1","D2","D3","D4","D4","D4","D4"];
+  const key = plan[idx];
+  const day = splitDays.find(d=>d.key===key) || splitDays[0];
+  return { ...day, date: todayISO(), override:false };
+}
+
+function syncOverrideUI(){
+  const sel = document.getElementById("dayOverrideSelect");
+  const hint = document.getElementById("overrideHint");
+  if(!sel || !hint) return;
+
+  const ov = getDayOverrideForToday();
+  sel.value = ov || "";
+  hint.textContent = ov ? `Override activo hoy: ${ov}. (Solo hoy)` : `Modo automático activo (por día de semana).`;
+}
+
+function guardarOverrideHoy(){
+  const sel = document.getElementById("dayOverrideSelect");
+  const val = sel ? sel.value : "";
+  if(!val){ showToast("⚠️ Selecciona D1–D4 o usa Quitar"); return; }
+  setDayOverrideForToday(val);
+  syncOverrideUI();
+  renderWorkoutToday();
+  showToast("✅ Día guardado para hoy");
+}
+function borrarOverrideHoy(){
+  clearDayOverride();
+  syncOverrideUI();
+  renderWorkoutToday();
+  showToast("✅ Override quitado");
+}
+
+function renderWorkoutToday(){
+  const w = workoutToday();
+  const box = document.getElementById("workoutBox");
+  if(box){
+    const text = (blocks[w.key] || []).map(x=>`• ${x}`).join("\n");
+    const flag = w.override ? " (MANUAL)" : " (AUTO)";
+    box.textContent = `${w.name}${flag}\n${w.focus}\n\n📅 ${w.date}\n\n${text}`;
+  }
+
+  const qe = document.getElementById("quickExercise");
+  if(qe && !qe.value){
+    const defaults = { D1:"Press pecho máquina/mancuernas", D2:"Remo con pecho apoyado", D3:"Prensa inclinada", D4:"Press inclinado ligero" };
+    qe.value = defaults[w.key] || "";
+  }
+  syncOverrideUI();
+  renderReminder();
+  renderPhaseHint();
+}
+function abrirEntreno(){
+  setActiveNav("entreno");
+  showScreen("entreno");
+  renderWorkoutToday();
+}
+
+/* =========================
+   FASES
+========================= */
+const LS_PHASES = "bilbo_phases_v1";
+const LS_ACTIVE_PHASE = "bilbo_active_phase_v1";
+
+function defaultPhases(){
+  return [{ id:"phase_default", name:"Fase principal", createdAt: Date.now() }];
+}
+function readPhases(){
+  try{
+    const arr = JSON.parse(localStorage.getItem(LS_PHASES) || "null");
+    if(Array.isArray(arr) && arr.length) return arr;
+  }catch(e){}
+  return defaultPhases();
+}
+function writePhases(arr){ localStorage.setItem(LS_PHASES, JSON.stringify(arr)); }
+function getActivePhaseId(){
+  const id = localStorage.getItem(LS_ACTIVE_PHASE);
+  const phases = readPhases();
+  if(id && phases.some(p=>p.id===id)) return id;
+  const fallback = phases[0].id;
+  localStorage.setItem(LS_ACTIVE_PHASE, fallback);
+  return fallback;
+}
+function setActivePhase(id){ localStorage.setItem(LS_ACTIVE_PHASE, id); }
+function getActivePhase(){
+  const phases = readPhases();
+  const id = getActivePhaseId();
+  return phases.find(p=>p.id===id) || phases[0];
+}
+function renderPhasesUI(){
+  const sel = document.getElementById("phaseSelect");
+  if(!sel) return;
+
+  const phases = readPhases();
+  const activeId = getActivePhaseId();
+  sel.innerHTML = phases.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+  sel.value = activeId;
+  renderPhaseHint();
+}
+function setActivePhaseFromUI(){
+  const sel = document.getElementById("phaseSelect");
+  if(!sel) return;
+  setActivePhase(sel.value);
+  showToast("✅ Fase activa cambiada");
+  renderPhaseHint();
+  renderReminder();
+  if(screens.stats.classList.contains("active")) renderStats();
+  if(screens.nivel.classList.contains("active")) renderNivel();
+}
+function crearFase(){
+  const name = prompt("Nombre de la nueva fase:", "Fase nueva");
+  if(!name) return;
+
+  const phases = readPhases();
+  const id = "phase_" + uid();
+  phases.push({ id, name: name.trim(), createdAt: Date.now() });
+  writePhases(phases);
+  setActivePhase(id);
+
+  renderPhasesUI();
+  showToast("✅ Fase creada y activada");
+}
+function borrarFaseActiva(){
+  const active = getActivePhase();
+  if(active.id === "phase_default"){
+    showToast("⚠️ No puedes borrar la fase principal");
+    return;
+  }
+  if(!confirm(`¿Borrar fase "${active.name}"?`)) return;
+
+  const phases = readPhases().filter(p=>p.id !== active.id);
+  writePhases(phases);
+  setActivePhase(phases[0].id);
+
+  renderPhasesUI();
+  showToast("🗑️ Fase borrada");
+}
+function renderPhaseHint(){
+  const el = document.getElementById("phaseHint");
+  if(!el) return;
+  const p = getActivePhase();
+  el.textContent = `Fase activa: ${p.name}`;
+}
+
+/* =========================
+   LOG + MIGRACIÓN
+========================= */
+const LS_LOG_V1 = "bilbo_log_v1";
+const LS_LOG = "bilbo_log_v3";
+const LS_MIGRATED = "bilbo_log_migrated_to_v3";
+const LS_MISSION = "bilbo_mission_v1";
+
+function safeParse(key){
+  try { return JSON.parse(localStorage.getItem(key) || "[]"); }
+  catch(e){ return []; }
+}
+function readLogAll(){
+  const arr = safeParse(LS_LOG);
+  return Array.isArray(arr) ? arr : [];
+}
+function writeLogAll(arr){ localStorage.setItem(LS_LOG, JSON.stringify(arr)); }
+
+function readLog(){
+  const all = readLogAll();
+  const pid = getActivePhaseId();
+  return all.filter(x => (x.phaseId || "phase_default") === pid);
+}
+function writeLogForActivePhase(filteredArr){
+  const pid = getActivePhaseId();
+  const all = readLogAll().filter(x => (x.phaseId || "phase_default") !== pid);
+  const withPhase = filteredArr.map(x => ({ ...x, phaseId: pid }));
+  writeLogAll([...withPhase, ...all].sort((a,b)=> (b.ts||0)-(a.ts||0)));
+}
+
+function migrateLogIfNeeded(){
+  if(localStorage.getItem(LS_MIGRATED) === "1") return;
+
+  const v3 = safeParse(LS_LOG);
+  if(Array.isArray(v3) && v3.length > 0){
+    localStorage.setItem(LS_MIGRATED, "1");
+    return;
+  }
+
+  const candidates = ["bilbo_log_v2", LS_LOG_V1];
+  let source = [];
+  for(const k of candidates){
+    const arr = safeParse(k);
+    if(Array.isArray(arr) && arr.length){ source = arr; break; }
+  }
+
+  if(!Array.isArray(source) || source.length === 0){
+    localStorage.setItem(LS_MIGRATED, "1");
+    return;
+  }
+
+  const phases = readPhases();
+  writePhases(phases);
+  setActivePhase(getActivePhaseId());
+
+  const converted = source.map((it) => ({
+    id: it.id || uid(),
+    ts: it.ts ? Number(it.ts) : Date.now(),
+    date: it.date || "",
+    day: it.day || "",
+    dayName: it.dayName || "",
+    ejercicio: it.ejercicio || "",
+    peso: it.peso || "",
+    reps: it.reps || "",
+    serie: it.serie || "",
+    rpe: it.rpe || "",
+    phaseId: it.phaseId || "phase_default"
+  }));
+
+  writeLogAll(converted);
+  localStorage.setItem(LS_MIGRATED, "1");
+  showToast(`✅ Migrado historial: ${converted.length} series`);
+}
+
+/* =========================
+   MODAL registrar/editar
+========================= */
+let EDITING_ID = null;
+
+function abrirModalSerie(ejercicio = "", prefill = null){
+  const modal = document.getElementById("modal");
+  const title = document.getElementById("modalTitle");
+
+  if(prefill){
+    EDITING_ID = prefill.id || null;
+    title.textContent = "EDITAR SERIE";
+    document.getElementById("mEjercicio").value = prefill.ejercicio || "";
+    document.getElementById("mPeso").value = prefill.peso || "";
+    document.getElementById("mReps").value = prefill.reps || "";
+    document.getElementById("mSerie").value = prefill.serie || "1";
+    document.getElementById("mRpe").value = prefill.rpe || "";
+  }else{
+    EDITING_ID = null;
+    title.textContent = "REGISTRAR SERIE";
+    document.getElementById("mEjercicio").value = ejercicio || "";
+    document.getElementById("mPeso").value = "";
+    document.getElementById("mReps").value = "";
+    document.getElementById("mSerie").value = "1";
+    document.getElementById("mRpe").value = "";
+  }
+
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+  setTimeout(()=> document.getElementById("mEjercicio").focus(), 50);
+}
+function cerrarModalSerie(){
+  const modal = document.getElementById("modal");
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+function bindModal(){
+  const close = document.getElementById("modalClose");
+  const cancel = document.getElementById("modalCancel");
+  const save = document.getElementById("modalSave");
+  const backdrop = document.getElementById("modal");
+
+  close.onclick = cerrarModalSerie;
+  cancel.onclick = cerrarModalSerie;
+
+  backdrop.addEventListener("click", (e)=>{
+    if(e.target === backdrop) cerrarModalSerie();
+  });
+
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape" && backdrop.classList.contains("show")){
+      cerrarModalSerie();
+    }
+  });
+
+  save.onclick = ()=>{
+    const ejercicio = document.getElementById("mEjercicio").value.trim();
+    const peso = document.getElementById("mPeso").value;
+    const reps = document.getElementById("mReps").value;
+    const serie = document.getElementById("mSerie").value;
+    const rpe = document.getElementById("mRpe").value;
+
+    if(!ejercicio || !reps || !serie){
+      showToast("⚠️ Completa: ejercicio, reps y serie");
+      return;
+    }
+
+    const w = workoutToday();
+    const pid = getActivePhaseId();
+    const log = readLog();
+
+    if(EDITING_ID){
+      const idx = log.findIndex(x => x.id === EDITING_ID);
+      if(idx >= 0){
+        const prev = log[idx];
+        log[idx] = { ...prev, ejercicio, peso: peso || "", reps: reps || "", serie: serie || "", rpe: rpe || "" };
+        writeLogForActivePhase(log);
+        cerrarModalSerie();
+        renderLog(); renderNivel(); renderStats(); renderCalendar();
+        showToast("✅ Serie editada");
+        return;
+      }
+    }
+
+    const item = {
+      id: uid(),
+      ts: Date.now(),
+      date: w.date,
+      day: w.key,
+      dayName: w.name,
+      ejercicio,
+      peso: peso || "",
+      reps: reps || "",
+      serie: serie || "",
+      rpe: rpe || "",
+      phaseId: pid
+    };
+
+    log.unshift(item);
+    writeLogForActivePhase(log);
+
+    cerrarModalSerie();
+    renderLog(); renderNivel(); renderStats(); renderCalendar();
+    showToast("✅ Serie guardada");
+  };
+}
+
+function registrarSerie(){ abrirModalSerie(""); }
+function registrarSerieDesdeEntreno(){
+  const ex = (document.getElementById("quickExercise")?.value || "").trim();
+  abrirModalSerie(ex);
+}
+
+/* =========================
+   LOG UI
+========================= */
+function renderLog(){
+  const list = document.getElementById("logList");
+  const hint = document.getElementById("logEmptyHint");
+  if(!list) return;
+
+  const log = readLog();
+  list.innerHTML = "";
+  if(hint) hint.style.display = log.length ? "none" : "block";
+
+  log.slice(0,250).forEach(it=>{
+    const div = document.createElement("div");
+    div.className = "log-card";
+
+    const time = new Date(it.ts).toLocaleString();
+    const line1 = `${it.dayName || it.day || ""}`;
+    const line2 = `📅 ${it.date || ""} · ${time}`;
+    const line3 = `${it.ejercicio || ""}`;
+    const line4 =
+      `Serie ${it.serie || "-"} · ${it.peso || "-"} kg · ${it.reps || "-"} reps` +
+      (it.rpe ? ` · RPE ${it.rpe}` : "");
+
+    div.textContent = `${line1}\n${line2}\n${line3}\n${line4}`;
+
+    const actions = document.createElement("div");
+    actions.className = "mini-actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "mini";
+    editBtn.textContent = "Editar ✏️";
+    editBtn.onclick = ()=> abrirModalSerie("", it);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "mini danger";
+    delBtn.textContent = "Borrar 🗑️";
+    delBtn.onclick = ()=>{
+      if(!confirm("¿Borrar esta serie?")) return;
+      borrarSerie(it.id);
+    };
+
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    div.appendChild(actions);
+    list.appendChild(div);
+  });
+}
+
+function borrarSerie(id){
+  const log = readLog();
+  writeLogForActivePhase(log.filter(x => x.id !== id));
+  renderLog(); renderNivel(); renderStats(); renderCalendar();
+  showToast("🗑️ Serie borrada");
+}
+function borrarHistorial(){
+  if(!confirm("¿Borrar TODO el historial de la fase activa?")) return;
+  writeLogForActivePhase([]);
+  renderLog(); renderNivel(); renderStats(); renderCalendar();
+  showToast("🗑️ Historial borrado (fase)");
+}
+
+/* =========================
+   CSV
+========================= */
+function csvEscape(v){
+  const s = String(v ?? "");
+  if (/[,"\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+function exportarCSV(){
+  const log = readLog();
+  const header = ["fecha","dia_key","dia_nombre","ejercicio","serie","peso_kg","reps","rpe","timestamp","id","fase"];
+  const phaseName = getActivePhase().name;
+
+  const rows = log.map(it => ([
+    it.date || "",
+    it.day || "",
+    it.dayName || "",
+    it.ejercicio || "",
+    it.serie || "",
+    it.peso || "",
+    it.reps || "",
+    it.rpe || "",
+    it.ts ? new Date(it.ts).toISOString() : "",
+    it.id || "",
+    phaseName
+  ]));
+
+  const csv = header.join(",") + "\n" + rows.map(r => r.map(csvEscape).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `bilbo_log_${phaseName.replace(/\s+/g,"_")}_${todayISO()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  showToast("✅ CSV descargado");
+}
+
+/* =========================
+   e1RM + STATS
+========================= */
+function e1RM_Epley(weight, reps){
+  const w = toNum(weight);
+  const r = Math.floor(toNum(reps));
+  if(!Number.isFinite(w) || !Number.isFinite(r) || w <= 0 || r <= 0) return NaN;
+  const rr = clamp(r, 1, 30);
+  return w * (1 + (rr / 30));
+}
+function withinLastDays(ts, days){
+  const ms = days * 24 * 60 * 60 * 1000;
+  return (Date.now() - ts) <= ms;
+}
+function fmtKg(n){
+  if(!Number.isFinite(n)) return "-";
+  const v = Math.round(n * 10) / 10;
+  return `${v}`;
+}
+function summarize(log){
+  const sessions = new Set(log.map(x => x.date).filter(Boolean));
+  let tonnage7 = 0, tonnage28 = 0;
+  let series7 = 0, series28 = 0;
+
+  const byExercise28 = new Map();
+  const prByExercise = new Map();
+
+  for(const s of log){
+    const ts = Number(s.ts) || 0;
+    const is28 = ts && withinLastDays(ts, 28);
+    const is7  = ts && withinLastDays(ts, 7);
+
+    if(is28) series28++;
+    if(is7) series7++;
+
+    const w = toNum(s.peso);
+    const r = toNum(s.reps);
+
+    if(Number.isFinite(w) && Number.isFinite(r) && w > 0 && r > 0){
+      const t = w * r;
+      if(is28) tonnage28 += t;
+      if(is7)  tonnage7 += t;
+
+      if(is28){
+        const ex = (s.ejercicio || "Sin nombre").trim();
+        const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
+        cur.sets += 1;
+        cur.tonnage += t;
+        byExercise28.set(ex, cur);
+      }
+
+      const exKey = (s.ejercicio || "Sin nombre").trim();
+      const e1 = e1RM_Epley(w, r);
+      if(Number.isFinite(e1)){
+        const prev = prByExercise.get(exKey);
+        if(!prev || e1 > prev.e1rm){
+          prByExercise.set(exKey, { e1rm: e1, w, r, date: s.date || "", ts });
+        }
+      }
+    }else if(is28){
+      const ex = (s.ejercicio || "Sin nombre").trim();
+      const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
+      cur.sets += 1;
+      byExercise28.set(ex, cur);
+    }
+  }
+
+  const top28 = [...byExercise28.entries()]
+    .map(([ex, v]) => ({ ex, sets: v.sets, tonnage: v.tonnage }))
+    .sort((a,b) => (b.tonnage - a.tonnage) || (b.sets - a.sets))
+    .slice(0, 10);
+
+  const prs = [...prByExercise.entries()]
+    .map(([ex, v]) => ({ ex, ...v }))
+    .sort((a,b) => b.e1rm - a.e1rm)
+    .slice(0, 12);
+
+  return { sessionsCount: sessions.size, series7, series28, tonnage7, tonnage28, top28, prs };
+}
+
+function renderNivel(){
+  const box = document.getElementById("nivelBox");
+  const kpiGrid = document.getElementById("kpiGrid");
+  const prBox = document.getElementById("prBox");
+  const topBox = document.getElementById("topBox");
+  if(!box || !kpiGrid || !prBox || !topBox) return;
+
+  const log = readLog();
+  const sesiones = new Set(log.map(x=>x.date)).size;
+  const series = log.length;
+  const lvl = Math.min(99, Math.floor(series / 25) + 1);
+
+  box.textContent =
+    `Nivel: ${lvl}\n` +
+    `Sesiones (fase): ${sesiones}\n` +
+    `Series totales (fase): ${series}\n\n` +
+    `Fase: ${getActivePhase().name}\n` +
+    `Objetivo: constancia + progresión sin dolor lumbar.`;
+
+  const s = summarize(log);
+
+  kpiGrid.innerHTML = `
+    <div class="kpi"><div class="k">Series (7 días)</div><div class="v">${s.series7}</div></div>
+    <div class="kpi"><div class="k">Series (28 días)</div><div class="v">${s.series28}</div></div>
+    <div class="kpi"><div class="k">Tonelaje (7 días)</div><div class="v">${fmtKg(s.tonnage7)}<span class="muted"> kg</span></div></div>
+    <div class="kpi"><div class="k">Tonelaje (28 días)</div><div class="v">${fmtKg(s.tonnage28)}<span class="muted"> kg</span></div></div>
+  `;
+
+  if(s.prs.length === 0){
+    prBox.innerHTML = `<div class="log-meta">Aún no hay PRs. Registra series con peso y reps.</div>`;
+  }else{
+    prBox.innerHTML = `
+      <table class="table">
+        <thead><tr><th>Ejercicio</th><th>e1RM</th><th>Mejor serie</th></tr></thead>
+        <tbody>
+          ${s.prs.map(p => `
+            <tr>
+              <td>${p.ex}</td>
+              <td><span class="pill">${fmtKg(p.e1rm)} kg</span></td>
+              <td class="muted">${p.w}×${p.r} (${p.date || ""})</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  if(s.top28.length === 0){
+    topBox.innerHTML = `<div class="log-meta">Sin datos en últimos 28 días.</div>`;
+  }else{
+    topBox.innerHTML = `
+      <table class="table">
+        <thead><tr><th>Ejercicio</th><th>Series</th><th>Tonelaje</th></tr></thead>
+        <tbody>
+          ${s.top28.map(x => `
+            <tr>
+              <td>${x.ex}</td>
+              <td><span class="pill">${x.sets}</span></td>
+              <td class="muted">${fmtKg(x.tonnage)} kg</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+}
+
+/* ===== Stats PRO ===== */
+function norm(s){ return String(s||"").toLowerCase().trim(); }
+function classifyPriority(ex){
+  const e = norm(ex);
+  if(e.includes("gemelo") || e.includes("calf")) return "gemelos";
+  if(e.includes("antebra") || e.includes("muñeca") || e.includes("muneca") || e.includes("forearm") || e.includes("reverse curl")) return "antebrazos";
+  if(e.includes("cuello") || e.includes("neck")) return "cuello";
+  return null;
+}
+function weekKeyFromISODate(isoDate){
+  const d = new Date(isoDate + "T00:00:00");
+  const monday = startOfWeekISO(d);
+  const y = monday.getFullYear();
+  const jan4 = new Date(y,0,4);
+  const jan4Mon = startOfWeekISO(jan4);
+  const diff = (monday - jan4Mon) / (7*24*60*60*1000);
+  const wk = Math.floor(diff) + 1;
+  return `${y}-W${String(wk).padStart(2,"0")}`;
+}
+function renderStats(){
+  const log = readLog();
+  const meta = document.getElementById("statsMeta");
+  const kpis = document.getElementById("statsKpis");
+  const prioBox = document.getElementById("prioBox");
+  const weeklyBox = document.getElementById("weeklyBox");
+  if(!meta || !kpis || !prioBox || !weeklyBox) return;
+
+  meta.textContent = `Fase: ${getActivePhase().name} · Registros: ${log.length}`;
+
+  const dates = log.map(x=>x.date).filter(Boolean);
+  const uniqueDates = [...new Set(dates)];
+  const lastDate = uniqueDates.sort().slice(-1)[0] || null;
+
+  let daysSince = "-";
+  if(lastDate){
+    const a = new Date(lastDate + "T00:00:00");
+    const b = new Date(todayISO() + "T00:00:00");
+    daysSince = Math.round((b-a)/(24*60*60*1000));
+  }
+
+  const series28 = log.filter(x=> withinLastDays(x.ts||0,28)).length;
+  const ses7 = new Set(log.filter(x=> withinLastDays(x.ts||0,7)).map(x=>x.date)).size;
+  const ses28 = new Set(log.filter(x=> withinLastDays(x.ts||0,28)).map(x=>x.date)).size;
+
+  kpis.innerHTML = `
+    <div class="kpi"><div class="k">Días desde último</div><div class="v">${daysSince}</div></div>
+    <div class="kpi"><div class="k">Sesiones (7 días)</div><div class="v">${ses7}</div></div>
+    <div class="kpi"><div class="k">Sesiones (28 días)</div><div class="v">${ses28}</div></div>
+    <div class="kpi"><div class="k">Series (28 días)</div><div class="v">${series28}</div></div>
+  `;
+
+  const pr = { gemelos:{ sets:0, ton:0 }, antebrazos:{ sets:0, ton:0 }, cuello:{ sets:0, ton:0 } };
+  log.forEach(s=>{
+    if(!withinLastDays(s.ts||0,28)) return;
+    const k = classifyPriority(s.ejercicio);
+    if(!k) return;
+    pr[k].sets += 1;
+    const w = toNum(s.peso), r = toNum(s.reps);
+    if(Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) pr[k].ton += (w*r);
+  });
+
+  prioBox.innerHTML = `
+    <table class="table">
+      <thead><tr><th>Grupo</th><th>Series</th><th>Tonelaje</th></tr></thead>
+      <tbody>
+        <tr><td>Gemelos</td><td><span class="pill">${pr.gemelos.sets}</span></td><td class="muted">${fmtKg(pr.gemelos.ton)} kg</td></tr>
+        <tr><td>Antebrazos</td><td><span class="pill">${pr.antebrazos.sets}</span></td><td class="muted">${fmtKg(pr.antebrazos.ton)} kg</td></tr>
+        <tr><td>Cuello</td><td><span class="pill">${pr.cuello.sets}</span></td><td class="muted">${fmtKg(pr.cuello.ton)} kg</td></tr>
+      </tbody>
+    </table>
+  `;
+
+  const map = new Map();
+  log.forEach(s=>{
+    if(!s.date) return;
+    const wk = weekKeyFromISODate(s.date);
+    const cur = map.get(wk) || { sets:0, ton:0 };
+    cur.sets += 1;
+    const w = toNum(s.peso), r = toNum(s.reps);
+    if(Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) cur.ton += w*r;
+    map.set(wk, cur);
+  });
+
+  const keys = [...map.keys()].sort().slice(-8);
+  if(keys.length === 0){
+    weeklyBox.innerHTML = `<div class="log-meta">Sin datos suficientes aún.</div>`;
+  }else{
+    weeklyBox.innerHTML = `
+      <table class="table">
+        <thead><tr><th>Semana</th><th>Series</th><th>Tonelaje</th></tr></thead>
+        <tbody>
+          ${keys.map(k=>{
+            const v = map.get(k);
+            return `<tr><td>${k}</td><td><span class="pill">${v.sets}</span></td><td class="muted">${fmtKg(v.ton)} kg</td></tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+}
+
+/* =========================
+   CALENDARIO
+========================= */
+let CAL_ANCHOR = startOfWeekISO(new Date());
+
+function buildSessionsByDate(){
+  const log = readLog();
+  const map = new Map();
+  for(const s of log){
+    if(!s.date) continue;
+    const cur = map.get(s.date) || { count:0, dayKey: s.day || "" };
+    cur.count += 1;
+    if(!cur.dayKey && s.day) cur.dayKey = s.day;
+    map.set(s.date, cur);
+  }
+  return map;
+}
+function renderCalendar(){
+  const meta = document.getElementById("calMeta");
+  const grid = document.getElementById("weekGrid");
+  const last4 = document.getElementById("last4Box");
+  if(!meta || !grid || !last4) return;
+
+  const map = buildSessionsByDate();
+  meta.textContent = `Fase: ${getActivePhase().name} · Semana desde ${fmtShort(iso(CAL_ANCHOR))}`;
+
+  const today = todayISO();
+  const days = Array.from({length:7}, (_,i)=> iso(addDays(CAL_ANCHOR, i)));
+  const labels = ["L","M","X","J","V","S","D"];
+
+  grid.innerHTML = days.map((d,i)=>{
+    const has = map.get(d);
+    const cls = ["day", has ? "done" : "", d === today ? "today" : ""].join(" ");
+    const info = has ? `${has.count} series` : "—";
+    const dk = has?.dayKey ? `<div class="chip">${has.dayKey}</div>` : "";
+    return `
+      <div class="${cls}">
+        <div class="d">${labels[i]}</div>
+        <div class="n">${fmtShort(d)}</div>
+        <div class="m">${info}</div>
+        ${dk}
+      </div>
+    `;
+  }).join("");
+
+  const start = addDays(CAL_ANCHOR, -7*3);
+  const weeks = Array.from({length:4}, (_,w)=> addDays(start, w*7));
+  last4.innerHTML = weeks.map(wStart=>{
+    const wDays = Array.from({length:7}, (_,i)=> iso(addDays(wStart, i)));
+    const line = wDays.map(d=>{
+      const has = map.get(d);
+      const mark = has ? "●" : "·";
+      return `<span title="${d}">${mark}</span>`;
+    }).join(" ");
+    return `
+      <div class="log-card">
+        <div style="font-weight:800;">Semana ${fmtShort(iso(wStart))}</div>
+        <div class="log-meta" style="margin-top:6px;">${line}</div>
+      </div>
+    `;
+  }).join("");
+}
+function calPrevWeek(){ CAL_ANCHOR = addDays(CAL_ANCHOR, -7); renderCalendar(); }
+function calNextWeek(){ CAL_ANCHOR = addDays(CAL_ANCHOR, +7); renderCalendar(); }
+function calThisWeek(){ CAL_ANCHOR = startOfWeekISO(new Date()); renderCalendar(); }
+
+/* =========================
+   RECORDATORIO
+========================= */
+function renderReminder(){
+  const banner = document.getElementById("reminderBanner");
+  const text = document.getElementById("reminderText");
+  if(!banner || !text) return;
+
+  const log = readLog();
+  const w = workoutToday();
+
+  if(log.length === 0){
+    banner.style.display = "block";
+    text.textContent = `Aún no hay registros en la fase "${getActivePhase().name}". Hoy toca: ${w.key} (${w.name}).`;
+    return;
+  }
+
+  const dates = [...new Set(log.map(x=>x.date).filter(Boolean))].sort();
+  const last = dates[dates.length-1];
+  let daysSince = 0;
+  if(last){
+    const a = new Date(last + "T00:00:00");
+    const b = new Date(todayISO() + "T00:00:00");
+    daysSince = Math.round((b-a)/(24*60*60*1000));
+  }
+
+  banner.style.display = "block";
+  text.textContent =
+    `Fase: "${getActivePhase().name}". ` +
+    `Último entreno: ${last} (hace ${daysSince} día(s)). ` +
+    `Hoy toca: ${w.key} · ${w.name}.`;
+}
+
+/* =========================
+   MISIÓN
+========================= */
+function iniciarMision(){
+  const w = workoutToday();
+  localStorage.setItem(LS_MISSION, JSON.stringify({
+    date:w.date, day:w.key, dayName:w.name, objetivo:"Fuerza magra", phaseId:getActivePhaseId()
+  }));
+  showToast("🎯 Misión iniciada");
+  renderReminder();
+}
+function resetearMision(){
+  localStorage.removeItem(LS_MISSION);
+  showToast("✅ Misión reseteada");
+}
+
+/* =========================
+   BACKUP / RESTORE
+========================= */
+function exportarBackup(){
+  const payload = {
+    schema: "bilbo-pro-backup-v1",
+    exportedAt: new Date().toISOString(),
+    appVersion: APP_VERSION,
+    cacheVersion: CACHE_VERSION,
+    data: {
+      phases: readPhases(),
+      activePhaseId: getActivePhaseId(),
+      logAll: readLogAll(),
+      dayOverride: localStorage.getItem(LS_DAY_OVERRIDE) || null,
+      mission: localStorage.getItem(LS_MISSION) || null
+    }
+  };
+
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type:"application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `bilbo_backup_${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast("✅ Backup descargado");
+}
+function clickImport(){
+  const inp = document.getElementById("importFile");
+  if(!inp) return;
+  inp.value = "";
+  inp.click();
+}
+async function importBackupFile(file){
+  const txt = await file.text();
+  let obj = null;
+  try{ obj = JSON.parse(txt); }catch(e){
+    showToast("⚠️ JSON inválido");
+    return;
+  }
+  if(!obj || obj.schema !== "bilbo-pro-backup-v1" || !obj.data){
+    showToast("⚠️ Backup no reconocido");
+    return;
+  }
+  if(!confirm("¿Importar backup y SOBRESCRIBIR tus datos actuales?")) return;
+
+  const d = obj.data;
+  if(Array.isArray(d.phases) && d.phases.length) writePhases(d.phases);
+  if(d.activePhaseId) setActivePhase(d.activePhaseId);
+  if(Array.isArray(d.logAll)) writeLogAll(d.logAll);
+
+  if(typeof d.dayOverride === "string") localStorage.setItem(LS_DAY_OVERRIDE, d.dayOverride);
+  else localStorage.removeItem(LS_DAY_OVERRIDE);
+
+  if(typeof d.mission === "string") localStorage.setItem(LS_MISSION, d.mission);
+  else localStorage.removeItem(LS_MISSION);
+
+  showToast("✅ Backup importado");
+  renderPhasesUI();
+  renderWorkoutToday();
+  renderLog();
+  renderNivel();
+  renderStats();
+  renderCalendar();
+  refreshPwaStatus();
+  renderReminder();
+}
+
+/* =========================
+   PWA: estado/actualizar
+========================= */
+async function refreshPwaStatus(){
+  const el = document.getElementById("pwaStatus");
+  if(!el) return;
+
+  if(!("serviceWorker" in navigator)){
+    el.textContent = "Estado: Service Worker NO disponible en este navegador.";
+    return;
+  }
+
+  const reg = await navigator.serviceWorker.getRegistration();
+  if(!reg){
+    el.textContent = "Estado: SW NO registrado (necesita HTTPS o localhost).";
+    return;
+  }
+
+  const state = reg.active ? "ACTIVO" : (reg.installing ? "INSTALANDO" : "REGISTRADO");
+  el.textContent = `Estado: SW ${state} · Cache: ${CACHE_VERSION} · App: ${APP_VERSION}`;
+}
+async function verVersion(){
+  await refreshPwaStatus();
+  showToast(`ℹ️ ${APP_VERSION} · cache ${CACHE_VERSION}`);
+}
+
+async function actualizarApp(){
+  if(!("serviceWorker" in navigator)){
+    showToast("⚠️ No hay Service Worker en este navegador");
+    return;
+  }
+
+  const reg = await navigator.serviceWorker.getRegistration();
+  if(!reg){
+    showToast("⚠️ SW no registrado. Usa HTTPS o localhost.");
+    return;
+  }
+
+  try{
+    await reg.update();
+    if(reg.waiting){
+      reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      showToast("🔄 Aplicando actualización…");
+    }else{
+      showToast("🔄 Buscando actualización…");
+    }
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      window.location.reload();
+    }, { once:true });
+
+    setTimeout(()=> window.location.reload(), 1200);
+  }catch(e){
+    console.log(e);
+    showToast("⚠️ No se pudo actualizar");
+  }
+}
+
+/* ===== Registrar SW (SOLO UNA VEZ) ===== */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try{
+      await navigator.serviceWorker.register("./sw.js");
+      await refreshPwaStatus();
+    }catch(e){
+      console.log("SW error:", e);
+    }
+  });
+}
+
+/* =========================
+   INIT
+========================= */
+document.addEventListener("DOMContentLoaded", ()=>{
+  const phases = readPhases();
+  writePhases(phases);
+  setActivePhase(getActivePhaseId());
+
+  migrateLogIfNeeded();
+  bindModal();
+
+  const inp = document.getElementById("importFile");
+  if(inp){
+    inp.addEventListener("change", async (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(f) await importBackupFile(f);
+    });
+  }
+
+  renderPhasesUI();
+  renderWorkoutToday();
+  renderLog();
+  renderNivel();
+  renderStats();
+  renderCalendar();
+  refreshPwaStatus();
+  renderReminder();
+});
+</script>
+
+</body>
+</html>
