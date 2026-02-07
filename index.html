@@ -1,552 +1,25 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Entreno App</title>
-
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icon-192.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
-<meta name="theme-color" content="#00ff9c">
-
-<style>
-  *{ box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; }
-  body{ margin:0; background:#050a08; color:#d7ffe9; }
-  .app{ max-width:420px; margin:auto; min-height:100vh; display:flex; flex-direction:column; padding:14px; }
-
-  .header{ text-align:center; margin-bottom:12px; }
-  .header h1{ margin:6px 0 2px; color:#00ff9c; }
-  .header p{ margin:0; font-size:13px; opacity:.75; }
-
-  .status-box{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
-  .status{ flex:1; padding:6px; border-radius:10px; text-align:center; font-size:11px; border:1px solid rgba(0,255,160,.25); }
-  .green{ color:#00ff9c } .yellow{ color:#ffd000 }
-
-  .btn{
-    width:100%; padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.4);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; margin-bottom:10px; font-weight:600;
-  }
-  .btn-main{ background:rgba(0,255,160,.12); border:1px solid #00ff9c; }
-
-  .panel{
-    margin-top:12px; padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.35);
-    border:1px solid rgba(0,255,160,.2);
-  }
-
-  .screen{ display:none; }
-  .screen.active{ display:block; }
-
-  .nav{
-    margin-top:auto; display:flex; justify-content:space-around;
-    padding:10px 0; border-top:1px solid rgba(0,255,160,.2);
-    gap:4px; flex-wrap:wrap;
-  }
-  .nav button{ background:none; border:none; color:#aaa; font-size:12px; padding:6px 4px; }
-  .nav button.active{ color:#00ff9c; font-weight:bold; }
-
-  .log-card{
-    padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.30);
-    border:1px solid rgba(0,255,160,.15);
-    margin:10px 0;
-    white-space:pre-wrap;
-  }
-  .log-meta{ opacity:.75; font-size:12px; }
-
-  .row{ display:flex; gap:10px; }
-  .row .btn{ width:auto; flex:1; margin-bottom:0; }
-
-  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
-  .field span{ font-size:12px; opacity:.8; }
-  .field input, .field select{
-    padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.4);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; outline:none;
-  }
-  .field input:focus, .field select:focus{ border-color:#00ff9c; }
-
-  .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,0,0,.65);
-    display:none; align-items:flex-end; justify-content:center;
-    padding:14px; z-index:9999;
-  }
-  .modal-backdrop.show{ display:flex; }
-
-  .modal{
-    width:100%; max-width:420px; background:#050a08;
-    border:1px solid rgba(0,255,160,.25);
-    border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.6);
-    overflow:hidden; transform:translateY(10px);
-  }
-
-  .modal-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:12px 12px 10px; border-bottom:1px solid rgba(0,255,160,.15);
-  }
-  .modal-title{ font-weight:800; color:#00ff9c; letter-spacing:.5px; }
-  .modal-close{
-    background:transparent; border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; border-radius:12px; padding:6px 10px;
-  }
-  .modal-body{ padding:12px; }
-  .modal-actions{
-    display:flex; gap:10px; padding:12px;
-    border-top:1px solid rgba(0,255,160,.15);
-  }
-  .modal-actions .btn{ flex:1; margin:0; }
-
-  .toast{
-    position:fixed; left:50%; bottom:78px; transform:translateX(-50%);
-    background:rgba(0,0,0,.85);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; padding:10px 14px; border-radius:14px;
-    z-index:10000; display:none;
-  }
-
-  .mini-actions{ display:flex; gap:8px; margin-top:10px; }
-  .mini{
-    flex:1; padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.35);
-    border:1px solid rgba(0,255,160,.18);
-    color:#d7ffe9; font-weight:600;
-  }
-  .mini.danger{ border-color:rgba(255,80,80,.6); }
-
-  .kpi-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
-  .kpi{
-    padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.28);
-    border:1px solid rgba(0,255,160,.12);
-  }
-  .kpi .k{ font-size:12px; opacity:.8; }
-  .kpi .v{ font-size:18px; font-weight:800; margin-top:4px; color:#00ff9c; }
-
-  .table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
-  .table th, .table td{
-    border-bottom:1px solid rgba(0,255,160,.12);
-    padding:8px 6px;
-    text-align:left;
-    vertical-align:top;
-  }
-  .table th{ color:#00ff9c; font-weight:800; }
-  .pill{
-    display:inline-block; padding:4px 8px; border-radius:999px;
-    border:1px solid rgba(0,255,160,.2);
-    background:rgba(0,255,160,.08);
-    font-size:11px; opacity:.95;
-  }
-  .muted{ opacity:.75; }
-
-  .banner{
-    margin-top:12px;
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px solid rgba(0,255,160,.18);
-    background:rgba(0,255,160,.06);
-  }
-  .banner .t{ color:#00ff9c; font-weight:800; margin-bottom:4px; }
-  .banner .s{ font-size:12px; opacity:.85; line-height:1.3; }
-
-  #installBtnMission, #installBtnSettings { display:none; }
-
-  .week-grid{
-    display:grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap:8px;
-    margin-top:10px;
-  }
-  .day{
-    padding:10px 6px;
-    border-radius:12px;
-    background:rgba(0,0,0,.25);
-    border:1px solid rgba(0,255,160,.12);
-    text-align:center;
-    min-height:64px;
-  }
-  .day .d{ font-weight:800; color:#00ff9c; font-size:12px; }
-  .day .n{ font-size:12px; margin-top:6px; }
-  .day .m{ font-size:11px; opacity:.75; margin-top:4px; }
-  .day.done{
-    border-color: rgba(0,255,160,.35);
-    background: rgba(0,255,160,.08);
-  }
-  .day.today{
-    outline:2px solid rgba(255,208,0,.55);
-  }
-  .chip{
-    display:inline-block; margin-top:6px;
-    font-size:10px; padding:3px 6px;
-    border-radius:999px;
-    border:1px solid rgba(0,255,160,.22);
-    background:rgba(0,255,160,.08);
-  }
-
-  /* ===== CHIPS EJERCICIOS ===== */
-  .chips{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-  }
-  .chipbtn{
-    padding:8px 10px;
-    border-radius:999px;
-    border:1px solid rgba(0,255,160,.22);
-    background:rgba(0,255,160,.08);
-    color:#d7ffe9;
-    font-size:12px;
-    font-weight:700;
-  }
-  .chipbtn:active{
-    transform:scale(.98);
-    background:rgba(0,255,160,.14);
-  }
-  .chipbtn.star{
-    border-color:rgba(255,208,0,.55);
-    background:rgba(255,208,0,.10);
-  }
-</style>
-</head>
-
-<body>
-  <div class="app">
-    <div class="header">
-      <h1>Entreno App</h1>
-      <p>INTERFAZ TÁCTICA · MODO OPERATIVO</p>
-    </div>
-
-    <div class="status-box">
-      <div class="status green">● STATUS: OK</div>
-      <div class="status yellow">● OBJETIVO: FUERZA MAGRA</div>
-      <div class="status green">● SYNC: CAPACITOR</div>
-    </div>
-
-    <!-- ===== MISIÓN ===== -->
-    <div id="screen-mision" class="screen active">
-      <button class="btn btn-main" onclick="iniciarMision()">INICIAR MISIÓN</button>
-      <button class="btn" onclick="abrirEntreno()">ABRIR ENTRENAMIENTO HOY</button>
-      <button class="btn" onclick="registrarSerie()">REGISTRAR SERIE</button>
-
-      <button id="installBtnMission" class="btn btn-main" onclick="instalarApp()">INSTALAR APP</button>
-
-      <div class="banner" id="reminderBanner" style="display:none;">
-        <div class="t">RECORDATORIO</div>
-        <div class="s" id="reminderText"></div>
-      </div>
-
-      <div class="panel">
-        <h3>ÓRDENES DEL DÍA</h3>
-        <p>Antebrazo · Gemelo · Cuello (prioridad)</p>
-        <div class="log-meta" id="phaseHint"></div>
-      </div>
-    </div>
-
-    <!-- ===== ENTRENO ===== -->
-    <div id="screen-entreno" class="screen">
-      <div class="panel">
-        <h3>ENTRENO DE HOY</h3>
-        <div id="workoutBox" class="log-card"></div>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">CALENDARIO (MANUAL)</h3>
-          <p class="log-meta" style="margin:0 0 10px;">
-            Si hoy no toca el día correcto, selecciónalo aquí (solo afecta a HOY).
-          </p>
-
-          <label class="field">
-            <span>Día de rutina para hoy</span>
-            <select id="dayOverrideSelect">
-              <option value="">Automático (por día semana)</option>
-              <option value="D1">D1 · Empuje + Gemelo</option>
-              <option value="D2">D2 · Tirón + Antebrazo</option>
-              <option value="D3">D3 · Pierna sin carga axial</option>
-              <option value="D4">D4 · Full suave + Cuello</option>
-            </select>
-          </label>
-
-          <div class="row" style="margin-bottom:10px;">
-            <button class="btn btn-main" onclick="guardarOverrideHoy()">Guardar</button>
-            <button class="btn" onclick="borrarOverrideHoy()">Quitar</button>
-          </div>
-
-          <div class="log-meta" id="overrideHint"></div>
-        </div>
-
-        <!-- ===== EJERCICIOS RÁPIDOS (NUEVO) ===== -->
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">EJERCICIOS RÁPIDOS</h3>
-          <p class="log-meta" style="margin:0 0 10px;">Toca para rellenar. Mantén pulsado para ⭐ favorito.</p>
-
-          <div class="chips" id="favChips"></div>
-
-          <div class="log-meta" style="margin-top:10px;">Recientes</div>
-          <div class="chips" id="recentChips"></div>
-
-          <div class="log-meta" style="margin-top:10px;">Del plan de hoy</div>
-          <div class="chips" id="todayChips"></div>
-        </div>
-
-        <label class="field" style="margin-top:10px;">
-          <span>Ejercicio a registrar</span>
-          <input id="quickExercise" type="text" placeholder="Ej: Prensa inclinada" />
-        </label>
-
-        <button class="btn btn-main" onclick="registrarSerieDesdeEntreno()">REGISTRAR SERIE (ENTRENO)</button>
-        <button class="btn" onclick="registrarSerie()">REGISTRAR SERIE (VACÍO)</button>
-      </div>
-    </div>
-
-    <!-- ===== LOG ===== -->
-    <div id="screen-log" class="screen">
-      <div class="panel">
-        <h3>HISTORIAL DE SERIES</h3>
-        <p id="logEmptyHint" class="log-meta">Sin registros aún. Pulsa “REGISTRAR SERIE”.</p>
-
-        <div class="row" style="margin:10px 0;">
-          <button class="btn" style="border-color: rgba(255,80,80,.6);" onclick="borrarHistorial()">Borrar historial</button>
-          <button class="btn" onclick="exportarCSV()">Exportar CSV</button>
-        </div>
-
-        <div id="logList"></div>
-      </div>
-    </div>
-
-    <!-- ===== NIVEL ===== -->
-    <div id="screen-nivel" class="screen">
-      <div class="panel">
-        <h3>NIVEL + ESTADÍSTICAS</h3>
-        <div id="nivelBox" class="log-card"></div>
-
-        <div class="kpi-grid" id="kpiGrid"></div>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">PRs e1RM (estimado)</h3>
-          <div class="log-meta">Cálculo e1RM: <span class="pill">Epley</span> (peso × (1 + reps/30))</div>
-          <div id="prBox"></div>
-        </div>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">Top ejercicios (últimos 28 días)</h3>
-          <div class="log-meta">Series y tonelaje (peso×reps). Si no pones peso, no suma tonelaje.</div>
-          <div id="topBox"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== STATS ===== -->
-    <div id="screen-stats" class="screen">
-      <div class="panel">
-        <h3>STATS PRO</h3>
-        <div class="log-meta" id="statsMeta"></div>
-
-        <div class="kpi-grid" id="statsKpis"></div>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">Prioridades (últimos 28 días)</h3>
-          <div class="log-meta">Series y volumen estimado (si hay peso). Clasificación por nombre del ejercicio.</div>
-          <div id="prioBox"></div>
-        </div>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">Volumen semanal (últimas 8 semanas)</h3>
-          <div class="log-meta">Tonnage = peso×reps. Si faltan pesos, solo cuenta series.</div>
-          <div id="weeklyBox"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== CAL ===== -->
-    <div id="screen-cal" class="screen">
-      <div class="panel">
-        <h3>CALENDARIO</h3>
-        <div class="log-meta" id="calMeta"></div>
-
-        <div class="row" style="margin-top:10px;">
-          <button class="btn" onclick="calPrevWeek()">◀ Semana</button>
-          <button class="btn btn-main" onclick="calThisWeek()">Hoy</button>
-          <button class="btn" onclick="calNextWeek()">Semana ▶</button>
-        </div>
-
-        <div class="week-grid" id="weekGrid"></div>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">Últimas 4 semanas</h3>
-          <div class="log-meta">Marca días con entreno. Abre LOG para ver detalles.</div>
-          <div id="last4Box"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== AJUSTES ===== -->
-    <div id="screen-ajustes" class="screen">
-      <div class="panel">
-        <h3>AJUSTES</h3>
-
-        <button id="installBtnSettings" class="btn btn-main" onclick="instalarApp()">INSTALAR APP</button>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">Fases (perfil de entrenamiento)</h3>
-          <div class="log-meta">Cada serie se guarda dentro de la fase activa.</div>
-
-          <label class="field" style="margin-top:10px;">
-            <span>Fase activa</span>
-            <select id="phaseSelect"></select>
-          </label>
-
-          <div class="row" style="margin-top:8px;">
-            <button class="btn btn-main" onclick="setActivePhaseFromUI()">Aplicar</button>
-            <button class="btn" onclick="crearFase()">Nueva fase</button>
-          </div>
-
-          <button class="btn" style="margin-top:10px; border-color: rgba(255,80,80,.6);" onclick="borrarFaseActiva()">Borrar fase activa</button>
-          <div class="log-meta" style="margin-top:10px;">*No se recomienda borrar si ya tiene datos.</div>
-        </div>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">Backup / Restaurar</h3>
-          <div class="log-meta">Exporta todo (log + fases + ajustes) en un JSON.</div>
-
-          <div class="row" style="margin-top:10px;">
-            <button class="btn btn-main" onclick="exportarBackup()">Exportar backup</button>
-            <button class="btn" onclick="clickImport()">Importar backup</button>
-          </div>
-
-          <div class="log-meta" style="margin-top:10px;">
-            Importar por defecto <span class="pill">sobrescribe</span> lo actual.
-          </div>
-
-          <input id="importFile" type="file" accept="application/json" style="display:none;" />
-        </div>
-
-        <div class="panel" style="margin-top:10px;">
-          <h3 style="margin:0 0 8px;">PWA / Actualizaciones</h3>
-          <div class="log-meta" id="pwaStatus">Estado: comprobando…</div>
-
-          <div class="row" style="margin-top:10px;">
-            <button class="btn btn-main" onclick="actualizarApp()">Actualizar app (cache)</button>
-            <button class="btn" onclick="verVersion()">Ver versión</button>
-          </div>
-
-          <div class="log-meta" style="margin-top:10px;">
-            Si no ves cambios, cierra la app (multitarea) y abre de nuevo.
-          </div>
-        </div>
-
-        <button class="btn" style="margin-top:10px;" onclick="resetearMision()">Resetear misión</button>
-      </div>
-    </div>
-
-    <!-- ===== NAV ===== -->
-    <div class="nav">
-      <button class="active" data-screen="mision">MISIÓN</button>
-      <button data-screen="entreno">ENTRENO</button>
-      <button data-screen="log">LOG</button>
-      <button data-screen="nivel">NIVEL</button>
-      <button data-screen="stats">STATS</button>
-      <button data-screen="cal">CAL</button>
-      <button data-screen="ajustes">AJUSTES</button>
-    </div>
-  </div>
-
-  <!-- ===== MODAL ===== -->
-  <div id="modal" class="modal-backdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Registrar serie">
-      <div class="modal-head">
-        <div id="modalTitle" class="modal-title">REGISTRAR SERIE</div>
-        <button class="modal-close" id="modalClose" aria-label="Cerrar">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <label class="field">
-          <span>Ejercicio</span>
-          <input id="mEjercicio" type="text" placeholder="Ej: Prensa inclinada" />
-        </label>
-
-        <div class="row">
-          <label class="field" style="flex:1;">
-            <span>Peso (kg)</span>
-            <input id="mPeso" type="number" inputmode="decimal" placeholder="0" />
-          </label>
-          <label class="field" style="flex:1;">
-            <span>Reps</span>
-            <input id="mReps" type="number" inputmode="numeric" placeholder="0" />
-          </label>
-        </div>
-
-        <div class="row">
-          <label class="field" style="flex:1;">
-            <span>Serie nº</span>
-            <input id="mSerie" type="number" inputmode="numeric" placeholder="1" />
-          </label>
-          <label class="field" style="flex:1;">
-            <span>RPE (opcional)</span>
-            <input id="mRpe" type="number" inputmode="decimal" placeholder="8" step="0.5" min="0" max="10" />
-          </label>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn" id="modalCancel">Cancelar</button>
-        <button class="btn btn-main" id="modalSave">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="toast" class="toast"></div>
-
-<script>
 /* =========================
-   VERSIONES
+   Entreno App — Bilbo Pro PWA
+   Todo en localStorage (privado)
 ========================= */
-const APP_VERSION = "EntrenoApp-PWA 1.3.0";
-const CACHE_VERSION = "entrenoapp-v1"; // debe coincidir con sw.js
+
+const APP_VERSION = "EntrenoApp-PWA 2.0 FULL";
+const CACHE_VERSION = "entreno-cache-v1";
 
 /* =========================
-   INSTALL: beforeinstallprompt
+   Keys
 ========================= */
-let deferredInstallPrompt = null;
-
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-
-  const b1 = document.getElementById("installBtnMission");
-  const b2 = document.getElementById("installBtnSettings");
-  if(b1) b1.style.display = "block";
-  if(b2) b2.style.display = "block";
-
-  showToast("📲 App lista para instalar");
-});
-
-window.addEventListener("appinstalled", () => {
-  deferredInstallPrompt = null;
-  const b1 = document.getElementById("installBtnMission");
-  const b2 = document.getElementById("installBtnSettings");
-  if(b1) b1.style.display = "none";
-  if(b2) b2.style.display = "none";
-  showToast("✅ App instalada");
-});
-
-async function instalarApp(){
-  if(!deferredInstallPrompt){
-    showToast("ℹ️ Menú ⋮ → Instalar / Añadir a pantalla.");
-    return;
-  }
-  deferredInstallPrompt.prompt();
-  const res = await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-
-  if(res && res.outcome === "accepted") showToast("✅ Instalación aceptada");
-  else showToast("❌ Instalación cancelada");
-}
+const LS_DAY_OVERRIDE = "entreno_day_override_v1";
+const LS_PHASES = "entreno_phases_v1";
+const LS_ACTIVE_PHASE = "entreno_active_phase_v1";
+const LS_LOG_ALL = "entreno_log_v4";
+const LS_MISSION = "entreno_mission_v1";
+const LS_MIGRATED = "entreno_migrated_to_v4";
+const LS_FAVS = "entreno_favs_v1";
+const LS_REST = "entreno_rest_settings_v1";
 
 /* =========================
-   HELPERS
+   Helpers
 ========================= */
 function showToast(msg){
   const t = document.getElementById("toast");
@@ -564,7 +37,7 @@ function toNum(v){
   const n = Number(String(v ?? "").replace(",", "."));
   return Number.isFinite(n) ? n : NaN;
 }
-function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function clamp(n,a,b){ return Math.max(a, Math.min(b, n)); }
 function startOfWeekISO(date = new Date()){
   const d = new Date(date);
   const day = (d.getDay() + 6) % 7; // 0=lunes
@@ -582,22 +55,24 @@ function fmtShort(isoDate){
   const [y,m,d] = isoDate.split("-");
   return `${d}/${m}`;
 }
+function norm(s){ return String(s||"").toLowerCase().trim(); }
 
 /* =========================
-   NAV + PANTALLAS
+   NAV / Screens
 ========================= */
-const screens = {
-  mision: document.getElementById("screen-mision"),
-  entreno: document.getElementById("screen-entreno"),
-  log: document.getElementById("screen-log"),
-  nivel: document.getElementById("screen-nivel"),
-  stats: document.getElementById("screen-stats"),
-  cal: document.getElementById("screen-cal"),
-  ajustes: document.getElementById("screen-ajustes")
-};
-
+const screens = {};
+function initScreens(){
+  screens.mision  = document.getElementById("screen-mision");
+  screens.entreno = document.getElementById("screen-entreno");
+  screens.log     = document.getElementById("screen-log");
+  screens.nivel   = document.getElementById("screen-nivel");
+  screens.stats   = document.getElementById("screen-stats");
+  screens.cal     = document.getElementById("screen-cal");
+  screens.graf    = document.getElementById("screen-graf");
+  screens.ajustes = document.getElementById("screen-ajustes");
+}
 function showScreen(key){
-  Object.values(screens).forEach(s=>s.classList.remove("active"));
+  Object.values(screens).forEach(s=>s?.classList.remove("active"));
   if(screens[key]) screens[key].classList.add("active");
 }
 function setActiveNav(key){
@@ -605,24 +80,26 @@ function setActiveNav(key){
     b.classList.toggle("active", b.getAttribute("data-screen") === key);
   });
 }
+function bindNav(){
+  document.querySelectorAll(".nav button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const key = btn.getAttribute("data-screen");
+      setActiveNav(key);
+      showScreen(key);
 
-document.querySelectorAll(".nav button").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    const key = btn.getAttribute("data-screen");
-    setActiveNav(key);
-    showScreen(key);
-
-    if(key==="log") renderLog();
-    if(key==="nivel") renderNivel();
-    if(key==="stats") renderStats();
-    if(key==="cal") renderCalendar();
-    if(key==="entreno"){ renderWorkoutToday(); renderQuickExerciseChips(); }
-    if(key==="ajustes"){ refreshPwaStatus(); renderPhasesUI(); }
+      if(key==="log") renderLog();
+      if(key==="nivel") renderNivel();
+      if(key==="stats") renderStats();
+      if(key==="cal") renderCalendar();
+      if(key==="graf") renderCharts();
+      if(key==="entreno") renderWorkoutToday();
+      if(key==="ajustes"){ refreshPwaStatus(); renderPhasesUI(); renderFavsUI(); loadRestSettingsUI(); }
+    });
   });
-});
+}
 
 /* =========================
-   BILBO PRO 4D
+   Bilbo Pro 4D (columna protegida)
 ========================= */
 const splitDays = [
   { key:"D1", name:"D1 · Empuje + Gemelo", focus:"Pecho/Hombro/Tríceps + Gemelo (prioridad)" },
@@ -665,8 +142,7 @@ function dayIndexFromWeek(){
   return map[dow];
 }
 
-/* ===== Override manual hoy ===== */
-const LS_DAY_OVERRIDE = "bilbo_day_override_v1";
+/* Override manual hoy */
 function getDayOverrideForToday(){
   try{
     const obj = JSON.parse(localStorage.getItem(LS_DAY_OVERRIDE) || "null");
@@ -701,25 +177,21 @@ function syncOverrideUI(){
   sel.value = ov || "";
   hint.textContent = ov ? `Override activo hoy: ${ov}. (Solo hoy)` : `Modo automático activo (por día de semana).`;
 }
-
-function guardarOverrideHoy(){
+window.guardarOverrideHoy = function(){
   const sel = document.getElementById("dayOverrideSelect");
   const val = sel ? sel.value : "";
   if(!val){ showToast("⚠️ Selecciona D1–D4 o usa Quitar"); return; }
   setDayOverrideForToday(val);
   syncOverrideUI();
   renderWorkoutToday();
-  renderQuickExerciseChips();
   showToast("✅ Día guardado para hoy");
-}
-
-function borrarOverrideHoy(){
+};
+window.borrarOverrideHoy = function(){
   clearDayOverride();
   syncOverrideUI();
   renderWorkoutToday();
-  renderQuickExerciseChips();
   showToast("✅ Override quitado");
-}
+};
 
 function renderWorkoutToday(){
   const w = workoutToday();
@@ -732,30 +204,27 @@ function renderWorkoutToday(){
 
   const qe = document.getElementById("quickExercise");
   if(qe && !qe.value){
-    const defaults = { D1:"Press pecho máquina/mancuernas", D2:"Remo con pecho apoyado", D3:"Prensa inclinada", D4:"Press inclinado ligero" };
+    const defaults = { D1:"Press pecho máquina/mancuernas", D2:"Remo con pecho apoyado", D3:"Prensa inclinada", D4:"Plancha" };
     qe.value = defaults[w.key] || "";
   }
+
   syncOverrideUI();
   renderReminder();
   renderPhaseHint();
+  renderFavChips();
 }
 
-function abrirEntreno(){
+/* Entreno */
+window.abrirEntreno = function(){
   setActiveNav("entreno");
   showScreen("entreno");
   renderWorkoutToday();
-  renderQuickExerciseChips();
-}
+};
 
 /* =========================
-   FASES
+   Fases
 ========================= */
-const LS_PHASES = "bilbo_phases_v1";
-const LS_ACTIVE_PHASE = "bilbo_active_phase_v1";
-
-function defaultPhases(){
-  return [{ id:"phase_default", name:"Fase principal", createdAt: Date.now() }];
-}
+function defaultPhases(){ return [{ id:"phase_default", name:"Fase principal", createdAt: Date.now() }]; }
 function readPhases(){
   try{
     const arr = JSON.parse(localStorage.getItem(LS_PHASES) || "null");
@@ -763,9 +232,7 @@ function readPhases(){
   }catch(e){}
   return defaultPhases();
 }
-function writePhases(arr){
-  localStorage.setItem(LS_PHASES, JSON.stringify(arr));
-}
+function writePhases(arr){ localStorage.setItem(LS_PHASES, JSON.stringify(arr)); }
 function getActivePhaseId(){
   const id = localStorage.getItem(LS_ACTIVE_PHASE);
   const phases = readPhases();
@@ -780,7 +247,6 @@ function getActivePhase(){
   const id = getActivePhaseId();
   return phases.find(p=>p.id===id) || phases[0];
 }
-
 function renderPhasesUI(){
   const sel = document.getElementById("phaseSelect");
   if(!sel) return;
@@ -792,48 +258,40 @@ function renderPhasesUI(){
 
   renderPhaseHint();
 }
-
-function setActivePhaseFromUI(){
+window.setActivePhaseFromUI = function(){
   const sel = document.getElementById("phaseSelect");
   if(!sel) return;
   setActivePhase(sel.value);
   showToast("✅ Fase activa cambiada");
   renderPhaseHint();
   renderReminder();
-  if(screens.stats.classList.contains("active")) renderStats();
-  if(screens.nivel.classList.contains("active")) renderNivel();
-}
-
-function crearFase(){
+  renderWorkoutToday();
+  if(screens.stats?.classList.contains("active")) renderStats();
+  if(screens.nivel?.classList.contains("active")) renderNivel();
+  if(screens.cal?.classList.contains("active")) renderCalendar();
+  if(screens.graf?.classList.contains("active")) renderCharts();
+};
+window.crearFase = function(){
   const name = prompt("Nombre de la nueva fase:", "Fase nueva");
   if(!name) return;
-
   const phases = readPhases();
   const id = "phase_" + uid();
   phases.push({ id, name: name.trim(), createdAt: Date.now() });
   writePhases(phases);
   setActivePhase(id);
-
   renderPhasesUI();
   showToast("✅ Fase creada y activada");
-}
-
-function borrarFaseActiva(){
+};
+window.borrarFaseActiva = function(){
   const active = getActivePhase();
-  if(active.id === "phase_default"){
-    showToast("⚠️ No puedes borrar la fase principal");
-    return;
-  }
+  if(active.id === "phase_default"){ showToast("⚠️ No puedes borrar la fase principal"); return; }
   if(!confirm(`¿Borrar fase "${active.name}"?`)) return;
-
   const phases = readPhases().filter(p=>p.id !== active.id);
   writePhases(phases);
   setActivePhase(phases[0].id);
-
   renderPhasesUI();
   showToast("🗑️ Fase borrada");
-}
-
+};
 function renderPhaseHint(){
   const el = document.getElementById("phaseHint");
   if(!el) return;
@@ -842,27 +300,79 @@ function renderPhaseHint(){
 }
 
 /* =========================
-   LOG + MIGRACIÓN
+   Favoritos
 ========================= */
-const LS_LOG_V1 = "bilbo_log_v1";
-const LS_LOG = "bilbo_log_v3";
-const LS_MIGRATED = "bilbo_log_migrated_to_v3";
-const LS_MISSION = "bilbo_mission_v1";
+function readFavs(){
+  try{
+    const arr = JSON.parse(localStorage.getItem(LS_FAVS) || "[]");
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+function writeFavs(arr){ localStorage.setItem(LS_FAVS, JSON.stringify(arr)); }
+function renderFavChips(){
+  const row = document.getElementById("favRow");
+  if(!row) return;
+  const favs = readFavs();
+  row.innerHTML = favs.map(f=>`<button class="fav" onclick="setQuickExercise(${JSON.stringify(f)})">${f}</button>`).join("");
+}
+window.setQuickExercise = function(name){
+  const qe = document.getElementById("quickExercise");
+  if(qe) qe.value = name;
+  showToast("✅ Favorito aplicado");
+};
+function renderFavsUI(){
+  const row = document.getElementById("favManageRow");
+  if(!row) return;
+  const favs = readFavs();
+  if(!favs.length){ row.innerHTML = `<div class="log-meta">Sin favoritos.</div>`; return; }
+  row.innerHTML = favs.map(f=>`
+    <button class="fav" onclick="removeFav(${JSON.stringify(f)})">🗑️ ${f}</button>
+  `).join("");
+}
+window.addFavoriteFromUI = function(){
+  const inp = document.getElementById("favInput");
+  const v = (inp?.value || "").trim();
+  if(!v) return;
+  const favs = readFavs();
+  if(!favs.includes(v)) favs.unshift(v);
+  writeFavs(favs.slice(0,30));
+  if(inp) inp.value = "";
+  renderFavChips();
+  renderFavsUI();
+  showToast("⭐ Favorito añadido");
+};
+window.removeFav = function(name){
+  const favs = readFavs().filter(x=>x !== name);
+  writeFavs(favs);
+  renderFavChips();
+  renderFavsUI();
+  showToast("🗑️ Favorito borrado");
+};
+window.clearFavorites = function(){
+  if(!confirm("¿Borrar TODOS los favoritos?")) return;
+  writeFavs([]);
+  renderFavChips();
+  renderFavsUI();
+  showToast("🗑️ Favoritos borrados");
+};
 
-function safeParse(key){
-  try { return JSON.parse(localStorage.getItem(key) || "[]"); }
-  catch(e){ return []; }
+/* =========================
+   LOG + Migración
+========================= */
+function safeParse(key, fallback){
+  try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+  catch(e){ return fallback; }
 }
 function readLogAll(){
-  const arr = safeParse(LS_LOG);
+  const arr = safeParse(LS_LOG_ALL, []);
   return Array.isArray(arr) ? arr : [];
 }
-function writeLogAll(arr){ localStorage.setItem(LS_LOG, JSON.stringify(arr)); }
-
+function writeLogAll(arr){
+  localStorage.setItem(LS_LOG_ALL, JSON.stringify(arr));
+}
 function readLog(){
-  const all = readLogAll();
   const pid = getActivePhaseId();
-  return all.filter(x => (x.phaseId || "phase_default") === pid);
+  return readLogAll().filter(x => (x.phaseId || "phase_default") === pid);
 }
 function writeLogForActivePhase(filteredArr){
   const pid = getActivePhaseId();
@@ -870,44 +380,38 @@ function writeLogForActivePhase(filteredArr){
   const withPhase = filteredArr.map(x => ({ ...x, phaseId: pid }));
   writeLogAll([...withPhase, ...all].sort((a,b)=> (b.ts||0)-(a.ts||0)));
 }
-
-function migrateLogIfNeeded(){
+function migrateIfNeeded(){
   if(localStorage.getItem(LS_MIGRATED) === "1") return;
 
-  const v3 = safeParse(LS_LOG);
-  if(Array.isArray(v3) && v3.length > 0){
+  const current = readLogAll();
+  if(current.length){
     localStorage.setItem(LS_MIGRATED, "1");
     return;
   }
 
-  const candidates = ["bilbo_log_v2", LS_LOG_V1];
+  // intenta traer de versiones antiguas
+  const candidates = ["bilbo_log_v3","bilbo_log_v2","bilbo_log_v1","entreno_log_v3"];
   let source = [];
   for(const k of candidates){
-    const arr = safeParse(k);
-    if(Array.isArray(arr) && arr.length){
-      source = arr;
-      break;
-    }
+    const arr = safeParse(k, []);
+    if(Array.isArray(arr) && arr.length){ source = arr; break; }
   }
-
-  if(!Array.isArray(source) || source.length === 0){
+  if(!source.length){
     localStorage.setItem(LS_MIGRATED, "1");
     return;
   }
 
-  const phases = readPhases();
-  writePhases(phases);
-  setActivePhase(getActivePhaseId());
-
-  const converted = source.map((it) => ({
+  const converted = source.map(it => ({
     id: it.id || uid(),
     ts: it.ts ? Number(it.ts) : Date.now(),
     date: it.date || "",
     day: it.day || "",
     dayName: it.dayName || "",
     ejercicio: it.ejercicio || "",
+    tipo: it.tipo || "reps",
     peso: it.peso || "",
     reps: it.reps || "",
+    timeSec: it.timeSec || "",
     serie: it.serie || "",
     rpe: it.rpe || "",
     phaseId: it.phaseId || "phase_default"
@@ -919,151 +423,93 @@ function migrateLogIfNeeded(){
 }
 
 /* =========================
-   EJERCICIOS RÁPIDOS (NUEVO)
-========================= */
-const LS_FAV_EX = "bilbo_fav_ex_v1";
-const LS_RECENT_EX = "bilbo_recent_ex_v1";
-
-function readArr(key){
-  try{
-    const a = JSON.parse(localStorage.getItem(key) || "[]");
-    return Array.isArray(a) ? a : [];
-  }catch(e){ return []; }
-}
-function writeArr(key, arr){
-  localStorage.setItem(key, JSON.stringify(arr));
-}
-function normEx(s){ return String(s || "").trim(); }
-
-function getFavs(){ return readArr(LS_FAV_EX).map(normEx).filter(Boolean); }
-function setFavs(arr){ writeArr(LS_FAV_EX, [...new Set(arr.map(normEx).filter(Boolean))]); }
-
-function getRecents(){ return readArr(LS_RECENT_EX).map(normEx).filter(Boolean); }
-function addRecent(ex){
-  ex = normEx(ex);
-  if(!ex) return;
-  const r = getRecents().filter(x => x !== ex);
-  r.unshift(ex);
-  writeArr(LS_RECENT_EX, r.slice(0, 16));
-}
-
-function toggleFav(ex){
-  ex = normEx(ex);
-  if(!ex) return;
-  const favs = getFavs();
-  const i = favs.indexOf(ex);
-  if(i >= 0) favs.splice(i,1);
-  else favs.unshift(ex);
-  setFavs(favs);
-  renderQuickExerciseChips();
-  showToast(i>=0 ? "⭐ Quitado de favoritos" : "⭐ Añadido a favoritos");
-}
-
-function listFromBlocks(dayKey){
-  const lines = (blocks[dayKey] || []);
-  const out = [];
-  for(const line of lines){
-    const parts = String(line).split("·")[0];
-    const name = parts.replace(/^.*?:\s*/,"").trim();
-    if(name) out.push(name);
-  }
-  return out;
-}
-
-function makeChip(ex, {star=false} = {}){
-  const b = document.createElement("button");
-  b.className = "chipbtn" + (star ? " star" : "");
-  b.type = "button";
-  b.textContent = (star ? "⭐ " : "") + ex;
-
-  b.addEventListener("click", ()=>{
-    const inp = document.getElementById("quickExercise");
-    if(inp){
-      inp.value = ex;
-      inp.focus();
-    }
-    showToast("✅ Ejercicio seleccionado");
-  });
-
-  let pressTimer = null;
-  const start = () => { pressTimer = setTimeout(()=> toggleFav(ex), 450); };
-  const cancel = () => { if(pressTimer) clearTimeout(pressTimer); pressTimer=null; };
-
-  b.addEventListener("touchstart", start, {passive:true});
-  b.addEventListener("touchend", cancel);
-  b.addEventListener("touchmove", cancel);
-  b.addEventListener("mousedown", start);
-  b.addEventListener("mouseup", cancel);
-  b.addEventListener("mouseleave", cancel);
-
-  return b;
-}
-
-function renderQuickExerciseChips(){
-  const favBox = document.getElementById("favChips");
-  const recBox = document.getElementById("recentChips");
-  const todayBox = document.getElementById("todayChips");
-  if(!favBox || !recBox || !todayBox) return;
-
-  const favs = getFavs();
-  favBox.innerHTML = "";
-  if(favs.length === 0){
-    favBox.innerHTML = `<div class="log-meta">No tienes favoritos aún. Mantén pulsado un ejercicio para ⭐.</div>`;
-  }else{
-    favs.slice(0,12).forEach(ex => favBox.appendChild(makeChip(ex, {star:true})));
-  }
-
-  const rec = getRecents();
-  recBox.innerHTML = "";
-  if(rec.length === 0){
-    recBox.innerHTML = `<div class="log-meta">Aún no hay recientes.</div>`;
-  }else{
-    rec.slice(0,12).forEach(ex => recBox.appendChild(makeChip(ex)));
-  }
-
-  const w = workoutToday();
-  const today = [...new Set(listFromBlocks(w.key))];
-  todayBox.innerHTML = "";
-  if(today.length === 0){
-    todayBox.innerHTML = `<div class="log-meta">No hay ejercicios del plan detectados.</div>`;
-  }else{
-    today.slice(0,16).forEach(ex => todayBox.appendChild(makeChip(ex)));
-  }
-}
-
-/* =========================
-   MODAL registrar/editar
+   Modal registrar/editar + AUTO SERIE
 ========================= */
 let EDITING_ID = null;
 
-function abrirModalSerie(ejercicio = "", prefill = null){
+function setTipoUI(tipo){
+  const repsField = document.getElementById("repsField");
+  const timeRow = document.getElementById("timeRow");
+  if(tipo === "time"){
+    if(repsField) repsField.style.display = "none";
+    if(timeRow) timeRow.style.display = "flex";
+  }else{
+    if(repsField) repsField.style.display = "block";
+    if(timeRow) timeRow.style.display = "none";
+  }
+}
+
+function parseMMSS(v){
+  const s = String(v||"").trim();
+  if(!s) return NaN;
+  if(/^\d+$/.test(s)) return Number(s); // si mete segundos directos
+  const m = s.match(/^(\d{1,2}):(\d{1,2})$/);
+  if(!m) return NaN;
+  const mm = Number(m[1]), ss = Number(m[2]);
+  if(!Number.isFinite(mm) || !Number.isFinite(ss)) return NaN;
+  return mm*60 + ss;
+}
+function formatMMSS(sec){
+  if(!Number.isFinite(sec) || sec < 0) return "";
+  const m = Math.floor(sec/60);
+  const s = Math.floor(sec%60);
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+function getLastSetSameExercise(exName, tipo){
+  const log = readLog();
+  const ex = norm(exName);
+  const t = tipo || "reps";
+  for(const it of log){
+    if(norm(it.ejercicio) === ex && (it.tipo||"reps") === t) return it;
+  }
+  return null;
+}
+
+function abrirModalSerie(ejercicio = "", prefill = null, forceNew = false){
   const modal = document.getElementById("modal");
   const title = document.getElementById("modalTitle");
 
-  if(prefill){
+  const mEj = document.getElementById("mEjercicio");
+  const mTipo = document.getElementById("mTipo");
+  const mPeso = document.getElementById("mPeso");
+  const mReps = document.getElementById("mReps");
+  const mTime = document.getElementById("mTime");
+  const mTimeSec = document.getElementById("mTimeSec");
+  const mSerie = document.getElementById("mSerie");
+  const mRpe = document.getElementById("mRpe");
+
+  if(prefill && !forceNew){
     EDITING_ID = prefill.id || null;
     title.textContent = "EDITAR SERIE";
-    document.getElementById("mEjercicio").value = prefill.ejercicio || "";
-    document.getElementById("mPeso").value = prefill.peso || "";
-    document.getElementById("mReps").value = prefill.reps || "";
-    document.getElementById("mSerie").value = prefill.serie || "1";
-    document.getElementById("mRpe").value = prefill.rpe || "";
+    mEj.value = prefill.ejercicio || "";
+    mTipo.value = prefill.tipo || "reps";
+    setTipoUI(mTipo.value);
+    mPeso.value = prefill.peso || "";
+    mReps.value = prefill.reps || "";
+    mTimeSec.value = prefill.timeSec || "";
+    mTime.value = prefill.timeSec ? formatMMSS(Number(prefill.timeSec)) : "";
+    mSerie.value = prefill.serie || "1";
+    mRpe.value = prefill.rpe || "";
   }else{
     EDITING_ID = null;
     title.textContent = "REGISTRAR SERIE";
-    document.getElementById("mEjercicio").value = ejercicio || "";
-    document.getElementById("mPeso").value = "";
-    document.getElementById("mReps").value = "";
-    document.getElementById("mSerie").value = "1";
-    document.getElementById("mRpe").value = "";
+    mEj.value = ejercicio || "";
+    mTipo.value = "reps";
+    setTipoUI("reps");
+    mPeso.value = "";
+    mReps.value = "";
+    mTime.value = "";
+    mTimeSec.value = "";
+    mSerie.value = "1";
+    mRpe.value = "";
   }
 
   modal.classList.add("show");
   modal.setAttribute("aria-hidden","false");
   document.body.style.overflow = "hidden";
-  setTimeout(()=> document.getElementById("mEjercicio").focus(), 50);
+  setTimeout(()=> mEj.focus(), 50);
 }
-
 function cerrarModalSerie(){
   const modal = document.getElementById("modal");
   modal.classList.remove("show");
@@ -1071,101 +517,194 @@ function cerrarModalSerie(){
   document.body.style.overflow = "";
 }
 
+function nextSerie(n){
+  const v = parseInt(n,10);
+  return Number.isFinite(v) ? (v+1) : 1;
+}
+
+/* Expuesto */
+window.registrarSerie = function(){ abrirModalSerie(""); };
+window.registrarSerieDesdeEntreno = function(){
+  const ex = (document.getElementById("quickExercise")?.value || "").trim();
+  abrirModalSerie(ex);
+};
+
+window.repetirUltimaSerieMasUno = function(){
+  const log = readLog();
+  if(!log.length){ showToast("ℹ️ No hay series aún"); return; }
+  const last = log[0];
+  const prefill = { ...last, id:null, serie: nextSerie(last.serie) };
+  abrirModalSerie(last.ejercicio, prefill, true);
+  // forzamos como “nuevo”
+  EDITING_ID = null;
+  document.getElementById("modalTitle").textContent = "REGISTRAR SERIE (+1)";
+};
+
+/* Guardar desde modal */
+function saveFromModal(){
+  const mEj = document.getElementById("mEjercicio");
+  const mTipo = document.getElementById("mTipo");
+  const mPeso = document.getElementById("mPeso");
+  const mReps = document.getElementById("mReps");
+  const mTime = document.getElementById("mTime");
+  const mTimeSec = document.getElementById("mTimeSec");
+  const mSerie = document.getElementById("mSerie");
+  const mRpe = document.getElementById("mRpe");
+
+  const ejercicio = (mEj.value || "").trim();
+  const tipo = (mTipo.value || "reps");
+  const peso = (mPeso.value || "").trim();
+  const reps = (mReps.value || "").trim();
+  const serieInput = (mSerie.value || "").trim();
+  const rpe = (mRpe.value || "").trim();
+
+  // tiempo
+  let timeSec = (mTimeSec.value || "").trim();
+  if(tipo === "time"){
+    // si no pone timeSec, intenta parsear mm:ss
+    if(!timeSec){
+      const sec = parseMMSS(mTime.value);
+      if(Number.isFinite(sec)) timeSec = String(sec);
+    }else{
+      // si pone sec, también reflejamos mm:ss (opcional)
+      const sec = Number(timeSec);
+      if(Number.isFinite(sec) && !mTime.value) mTime.value = formatMMSS(sec);
+    }
+  }else{
+    timeSec = "";
+    mTime.value = "";
+    mTimeSec.value = "";
+  }
+
+  // Validación
+  if(!ejercicio){ showToast("⚠️ Escribe el ejercicio"); return; }
+  if(!serieInput){ showToast("⚠️ Indica serie nº"); return; }
+  if(tipo === "reps"){
+    if(!reps){ showToast("⚠️ Indica reps"); return; }
+  }else{
+    const sec = toNum(timeSec);
+    if(!Number.isFinite(sec) || sec <= 0){ showToast("⚠️ Indica tiempo (mm:ss o seg)"); return; }
+  }
+
+  const w = workoutToday();
+  const pid = getActivePhaseId();
+
+  // Editar
+  const all = readLogAll();
+  if(EDITING_ID){
+    const idx = all.findIndex(x => x.id === EDITING_ID);
+    if(idx >= 0){
+      all[idx] = {
+        ...all[idx],
+        ejercicio, tipo, peso,
+        reps: tipo==="reps" ? reps : "",
+        timeSec: tipo==="time" ? timeSec : "",
+        serie: serieInput,
+        rpe
+      };
+      writeLogAll(all.sort((a,b)=> (b.ts||0)-(a.ts||0)));
+      cerrarModalSerie();
+      renderAllAfterChange();
+      showToast("✅ Serie editada");
+      return;
+    }
+  }
+
+  // Auto-serie inteligente:
+  // si mismo ejercicio y mismo tipo, serie = última serie +1 (en fase)
+  let serieFinal = serieInput;
+  const lastSame = getLastSetSameExercise(ejercicio, tipo);
+  if(lastSame){
+    serieFinal = String(nextSerie(lastSame.serie));
+    // si usuario no metió nada de peso/reps/rpe, proponemos también “clonar”
+    // (pero no forzamos; ya está escribiendo).
+  }
+
+  const item = {
+    id: uid(),
+    ts: Date.now(),
+    date: w.date,
+    day: w.key,
+    dayName: w.name,
+    ejercicio,
+    tipo,
+    peso,
+    reps: tipo==="reps" ? reps : "",
+    timeSec: tipo==="time" ? timeSec : "",
+    serie: serieFinal,
+    rpe,
+    phaseId: pid
+  };
+
+  all.unshift(item);
+  writeLogAll(all.sort((a,b)=> (b.ts||0)-(a.ts||0)));
+
+  cerrarModalSerie();
+  renderAllAfterChange();
+  showToast(`✅ Guardado (S${serieFinal})`);
+
+  // Timer descanso (si activo)
+  restAutoKick();
+}
+
+function renderAllAfterChange(){
+  renderLog();
+  renderNivel();
+  renderStats();
+  renderCalendar();
+  renderCharts();
+}
+
+/* Bind modal */
 function bindModal(){
   const close = document.getElementById("modalClose");
   const cancel = document.getElementById("modalCancel");
   const save = document.getElementById("modalSave");
   const backdrop = document.getElementById("modal");
+  const mTipo = document.getElementById("mTipo");
+  const mTime = document.getElementById("mTime");
+  const mTimeSec = document.getElementById("mTimeSec");
 
   close.onclick = cerrarModalSerie;
   cancel.onclick = cerrarModalSerie;
 
-  backdrop.addEventListener("click", (e)=>{
-    if(e.target === backdrop) cerrarModalSerie();
+  backdrop.addEventListener("click", (e)=>{ if(e.target === backdrop) cerrarModalSerie(); });
+  document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && backdrop.classList.contains("show")) cerrarModalSerie(); });
+
+  save.onclick = saveFromModal;
+
+  mTipo.addEventListener("change", ()=> setTipoUI(mTipo.value));
+
+  // sincroniza mm:ss <-> sec
+  mTime.addEventListener("blur", ()=>{
+    const sec = parseMMSS(mTime.value);
+    if(Number.isFinite(sec)) mTimeSec.value = String(sec);
   });
-
-  document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape" && backdrop.classList.contains("show")){
-      cerrarModalSerie();
-    }
+  mTimeSec.addEventListener("blur", ()=>{
+    const sec = toNum(mTimeSec.value);
+    if(Number.isFinite(sec)) mTime.value = formatMMSS(sec);
   });
-
-  save.onclick = ()=>{
-    const ejercicio = document.getElementById("mEjercicio").value.trim();
-    const peso = document.getElementById("mPeso").value;
-    const reps = document.getElementById("mReps").value;
-    const serie = document.getElementById("mSerie").value;
-    const rpe = document.getElementById("mRpe").value;
-
-    if(!ejercicio || !reps || !serie){
-      showToast("⚠️ Completa: ejercicio, reps y serie");
-      return;
-    }
-
-    const w = workoutToday();
-    const pid = getActivePhaseId();
-    const log = readLog();
-
-    if(EDITING_ID){
-      const idx = log.findIndex(x => x.id === EDITING_ID);
-      if(idx >= 0){
-        const prev = log[idx];
-        log[idx] = { ...prev, ejercicio, peso: peso || "", reps: reps || "", serie: serie || "", rpe: rpe || "" };
-        writeLogForActivePhase(log);
-
-        // ✅ recientes también al editar
-        addRecent(ejercicio);
-
-        cerrarModalSerie();
-        renderLog();
-        renderNivel();
-        renderStats();
-        renderCalendar();
-        renderQuickExerciseChips();
-        showToast("✅ Serie editada");
-        return;
-      }
-    }
-
-    const item = {
-      id: uid(),
-      ts: Date.now(),
-      date: w.date,
-      day: w.key,
-      dayName: w.name,
-      ejercicio,
-      peso: peso || "",
-      reps: reps || "",
-      serie: serie || "",
-      rpe: rpe || "",
-      phaseId: pid
-    };
-
-    log.unshift(item);
-    writeLogForActivePhase(log);
-
-    // ✅ AÑADIR A RECIENTES + refrescar chips
-    addRecent(ejercicio);
-    renderQuickExerciseChips();
-
-    cerrarModalSerie();
-    renderLog();
-    renderNivel();
-    renderStats();
-    renderCalendar();
-    showToast("✅ Serie guardada");
-  };
-}
-
-function registrarSerie(){ abrirModalSerie(""); }
-function registrarSerieDesdeEntreno(){
-  const ex = (document.getElementById("quickExercise")?.value || "").trim();
-  abrirModalSerie(ex);
 }
 
 /* =========================
    LOG UI
 ========================= */
+window.borrarHistorial = function(){
+  if(!confirm("¿Borrar TODO el historial de la fase activa?")) return;
+  const pid = getActivePhaseId();
+  const all = readLogAll().filter(x => (x.phaseId||"phase_default") !== pid);
+  writeLogAll(all);
+  renderAllAfterChange();
+  showToast("🗑️ Historial borrado (fase)");
+};
+
+function borrarSerie(id){
+  const all = readLogAll().filter(x => x.id !== id);
+  writeLogAll(all);
+  renderAllAfterChange();
+  showToast("🗑️ Serie borrada");
+}
+
 function renderLog(){
   const list = document.getElementById("logList");
   const hint = document.getElementById("logEmptyHint");
@@ -1178,32 +717,34 @@ function renderLog(){
   log.slice(0,250).forEach(it=>{
     const div = document.createElement("div");
     div.className = "log-card";
-
     const time = new Date(it.ts).toLocaleString();
-    const line1 = `${it.dayName || it.day || ""}`;
-    const line2 = `📅 ${it.date || ""} · ${time}`;
-    const line3 = `${it.ejercicio || ""}`;
-    const line4 =
-      `Serie ${it.serie || "-"} · ${it.peso || "-"} kg · ${it.reps || "-"} reps` +
-      (it.rpe ? ` · RPE ${it.rpe}` : "");
 
-    div.textContent = `${line1}\n${line2}\n${line3}\n${line4}`;
+    let line4 = "";
+    if((it.tipo||"reps") === "time"){
+      const sec = toNum(it.timeSec);
+      line4 = `Serie ${it.serie || "-"} · ${formatMMSS(sec)} (tiempo)` + (it.peso ? ` · ${it.peso} kg` : "") + (it.rpe ? ` · RPE ${it.rpe}` : "");
+    }else{
+      line4 = `Serie ${it.serie || "-"} · ${it.peso || "-"} kg · ${it.reps || "-"} reps` + (it.rpe ? ` · RPE ${it.rpe}` : "");
+    }
+
+    div.textContent =
+      `${it.dayName || it.day || ""}\n` +
+      `📅 ${it.date || ""} · ${time}\n` +
+      `${it.ejercicio || ""}\n` +
+      `${line4}`;
 
     const actions = document.createElement("div");
     actions.className = "mini-actions";
 
     const editBtn = document.createElement("button");
-    editBtn.className = "mini";
+    editBtn.className = "mini ok";
     editBtn.textContent = "Editar ✏️";
     editBtn.onclick = ()=> abrirModalSerie("", it);
 
     const delBtn = document.createElement("button");
     delBtn.className = "mini danger";
     delBtn.textContent = "Borrar 🗑️";
-    delBtn.onclick = ()=>{
-      if(!confirm("¿Borrar esta serie?")) return;
-      borrarSerie(it.id);
-    };
+    delBtn.onclick = ()=>{ if(confirm("¿Borrar esta serie?")) borrarSerie(it.id); };
 
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
@@ -1211,20 +752,6 @@ function renderLog(){
 
     list.appendChild(div);
   });
-}
-
-function borrarSerie(id){
-  const log = readLog();
-  writeLogForActivePhase(log.filter(x => x.id !== id));
-  renderLog(); renderNivel(); renderStats(); renderCalendar();
-  showToast("🗑️ Serie borrada");
-}
-
-function borrarHistorial(){
-  if(!confirm("¿Borrar TODO el historial de la fase activa?")) return;
-  writeLogForActivePhase([]);
-  renderLog(); renderNivel(); renderStats(); renderCalendar();
-  showToast("🗑️ Historial borrado (fase)");
 }
 
 /* =========================
@@ -1235,10 +762,9 @@ function csvEscape(v){
   if (/[,"\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }
-
-function exportarCSV(){
+window.exportarCSV = function(){
   const log = readLog();
-  const header = ["fecha","dia_key","dia_nombre","ejercicio","serie","peso_kg","reps","rpe","timestamp","id","fase"];
+  const header = ["fecha","dia_key","dia_nombre","ejercicio","tipo","serie","peso_kg","reps","time_sec","rpe","timestamp","id","fase"];
   const phaseName = getActivePhase().name;
 
   const rows = log.map(it => ([
@@ -1246,9 +772,11 @@ function exportarCSV(){
     it.day || "",
     it.dayName || "",
     it.ejercicio || "",
+    it.tipo || "reps",
     it.serie || "",
     it.peso || "",
     it.reps || "",
+    it.timeSec || "",
     it.rpe || "",
     it.ts ? new Date(it.ts).toISOString() : "",
     it.id || "",
@@ -1260,17 +788,17 @@ function exportarCSV(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `log_${phaseName.replace(/\s+/g,"_")}_${todayISO()}.csv`;
+  a.download = `entreno_log_${phaseName.replace(/\s+/g,"_")}_${todayISO()}.csv`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 
   showToast("✅ CSV descargado");
-}
+};
 
 /* =========================
-   e1RM + STATS
+   Nivel / Stats básicos + e1RM
 ========================= */
 function e1RM_Epley(weight, reps){
   const w = toNum(weight);
@@ -1279,18 +807,15 @@ function e1RM_Epley(weight, reps){
   const rr = clamp(r, 1, 30);
   return w * (1 + (rr / 30));
 }
-
 function withinLastDays(ts, days){
   const ms = days * 24 * 60 * 60 * 1000;
   return (Date.now() - ts) <= ms;
 }
-
 function fmtKg(n){
   if(!Number.isFinite(n)) return "-";
   const v = Math.round(n * 10) / 10;
   return `${v}`;
 }
-
 function summarize(log){
   const sessions = new Set(log.map(x => x.date).filter(Boolean));
   let tonnage7 = 0, tonnage28 = 0;
@@ -1307,10 +832,11 @@ function summarize(log){
     if(is28) series28++;
     if(is7) series7++;
 
+    // tonelaje y top: solo reps + peso
     const w = toNum(s.peso);
     const r = toNum(s.reps);
 
-    if(Number.isFinite(w) && Number.isFinite(r) && w > 0 && r > 0){
+    if((s.tipo||"reps")==="reps" && Number.isFinite(w) && Number.isFinite(r) && w > 0 && r > 0){
       const t = w * r;
       if(is28) tonnage28 += t;
       if(is7)  tonnage7 += t;
@@ -1419,8 +945,9 @@ function renderNivel(){
   }
 }
 
-/* ===== Stats PRO ===== */
-function norm(s){ return String(s||"").toLowerCase().trim(); }
+/* =========================
+   Stats PRO
+========================= */
 function classifyPriority(ex){
   const e = norm(ex);
   if(e.includes("gemelo") || e.includes("calf")) return "gemelos";
@@ -1460,7 +987,9 @@ function renderStats(){
     daysSince = Math.round((b-a)/(24*60*60*1000));
   }
 
+  const series7 = log.filter(x=> withinLastDays(x.ts||0,7)).length;
   const series28 = log.filter(x=> withinLastDays(x.ts||0,28)).length;
+
   const ses7 = new Set(log.filter(x=> withinLastDays(x.ts||0,7)).map(x=>x.date)).size;
   const ses28 = new Set(log.filter(x=> withinLastDays(x.ts||0,28)).map(x=>x.date)).size;
 
@@ -1478,7 +1007,7 @@ function renderStats(){
     if(!k) return;
     pr[k].sets += 1;
     const w = toNum(s.peso), r = toNum(s.reps);
-    if(Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) pr[k].ton += (w*r);
+    if((s.tipo||"reps")==="reps" && Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) pr[k].ton += (w*r);
   });
 
   prioBox.innerHTML = `
@@ -1499,12 +1028,12 @@ function renderStats(){
     const cur = map.get(wk) || { sets:0, ton:0 };
     cur.sets += 1;
     const w = toNum(s.peso), r = toNum(s.reps);
-    if(Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) cur.ton += w*r;
+    if((s.tipo||"reps")==="reps" && Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) cur.ton += w*r;
     map.set(wk, cur);
   });
 
   const keys = [...map.keys()].sort().slice(-8);
-  if(keys.length === 0){
+  if(!keys.length){
     weeklyBox.innerHTML = `<div class="log-meta">Sin datos suficientes aún.</div>`;
   }else{
     weeklyBox.innerHTML = `
@@ -1522,7 +1051,7 @@ function renderStats(){
 }
 
 /* =========================
-   CALENDARIO
+   Calendario
 ========================= */
 let CAL_ANCHOR = startOfWeekISO(new Date());
 
@@ -1585,12 +1114,12 @@ function renderCalendar(){
   }).join("");
 }
 
-function calPrevWeek(){ CAL_ANCHOR = addDays(CAL_ANCHOR, -7); renderCalendar(); }
-function calNextWeek(){ CAL_ANCHOR = addDays(CAL_ANCHOR, +7); renderCalendar(); }
-function calThisWeek(){ CAL_ANCHOR = startOfWeekISO(new Date()); renderCalendar(); }
+window.calPrevWeek = function(){ CAL_ANCHOR = addDays(CAL_ANCHOR, -7); renderCalendar(); };
+window.calNextWeek = function(){ CAL_ANCHOR = addDays(CAL_ANCHOR, +7); renderCalendar(); };
+window.calThisWeek = function(){ CAL_ANCHOR = startOfWeekISO(new Date()); renderCalendar(); };
 
 /* =========================
-   RECORDATORIO
+   Recordatorio
 ========================= */
 function renderReminder(){
   const banner = document.getElementById("reminderBanner");
@@ -1617,33 +1146,32 @@ function renderReminder(){
 
   banner.style.display = "block";
   text.textContent =
-    `Fase: "${getActivePhase().name}". ` +
-    `Último entreno: ${last} (hace ${daysSince} día(s)). ` +
+    `Fase: "${getActivePhase().name}". Último entreno: ${last} (hace ${daysSince} día(s)). ` +
     `Hoy toca: ${w.key} · ${w.name}.`;
 }
 
 /* =========================
-   MISIÓN
+   Misión
 ========================= */
-function iniciarMision(){
+window.iniciarMision = function(){
   const w = workoutToday();
   localStorage.setItem(LS_MISSION, JSON.stringify({
     date:w.date, day:w.key, dayName:w.name, objetivo:"Fuerza magra", phaseId:getActivePhaseId()
   }));
   showToast("🎯 Misión iniciada");
   renderReminder();
-}
-function resetearMision(){
+};
+window.resetearMision = function(){
   localStorage.removeItem(LS_MISSION);
   showToast("✅ Misión reseteada");
-}
+};
 
 /* =========================
-   BACKUP / RESTORE
+   Backup / Restore
 ========================= */
-function exportarBackup(){
+window.exportarBackup = function(){
   const payload = {
-    schema: "entrenoapp-backup-v1",
+    schema: "entreno-backup-v1",
     exportedAt: new Date().toISOString(),
     appVersion: APP_VERSION,
     cacheVersion: CACHE_VERSION,
@@ -1653,8 +1181,8 @@ function exportarBackup(){
       logAll: readLogAll(),
       dayOverride: localStorage.getItem(LS_DAY_OVERRIDE) || null,
       mission: localStorage.getItem(LS_MISSION) || null,
-      favs: localStorage.getItem(LS_FAV_EX) || null,
-      recents: localStorage.getItem(LS_RECENT_EX) || null
+      favs: localStorage.getItem(LS_FAVS) || null,
+      rest: localStorage.getItem(LS_REST) || null
     }
   };
 
@@ -1663,32 +1191,24 @@ function exportarBackup(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `backup_${todayISO()}.json`;
+  a.download = `entreno_backup_${todayISO()}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
   showToast("✅ Backup descargado");
-}
-
-function clickImport(){
+};
+window.clickImport = function(){
   const inp = document.getElementById("importFile");
   if(!inp) return;
   inp.value = "";
   inp.click();
-}
-
+};
 async function importBackupFile(file){
   const txt = await file.text();
   let obj = null;
-  try{ obj = JSON.parse(txt); }catch(e){
-    showToast("⚠️ JSON inválido");
-    return;
-  }
-  if(!obj || !obj.data){
-    showToast("⚠️ Backup no reconocido");
-    return;
-  }
+  try{ obj = JSON.parse(txt); }catch(e){ showToast("⚠️ JSON inválido"); return; }
+  if(!obj || obj.schema !== "entreno-backup-v1" || !obj.data){ showToast("⚠️ Backup no reconocido"); return; }
   if(!confirm("¿Importar backup y SOBRESCRIBIR tus datos actuales?")) return;
 
   const d = obj.data;
@@ -1702,85 +1222,111 @@ async function importBackupFile(file){
   if(typeof d.mission === "string") localStorage.setItem(LS_MISSION, d.mission);
   else localStorage.removeItem(LS_MISSION);
 
-  if(typeof d.favs === "string") localStorage.setItem(LS_FAV_EX, d.favs);
-  else localStorage.removeItem(LS_FAV_EX);
+  if(typeof d.favs === "string") localStorage.setItem(LS_FAVS, d.favs);
+  else localStorage.removeItem(LS_FAVS);
 
-  if(typeof d.recents === "string") localStorage.setItem(LS_RECENT_EX, d.recents);
-  else localStorage.removeItem(LS_RECENT_EX);
+  if(typeof d.rest === "string") localStorage.setItem(LS_REST, d.rest);
+  else localStorage.removeItem(LS_REST);
 
   showToast("✅ Backup importado");
   renderPhasesUI();
+  renderFavChips();
+  renderFavsUI();
+  loadRestSettingsUI();
   renderWorkoutToday();
-  renderLog();
-  renderNivel();
-  renderStats();
-  renderCalendar();
+  renderAllAfterChange();
   refreshPwaStatus();
   renderReminder();
-  renderQuickExerciseChips();
 }
 
 /* =========================
-   PWA: estado/actualizar
+   PWA install prompt
+========================= */
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+
+  const b1 = document.getElementById("installBtnMission");
+  const b2 = document.getElementById("installBtnSettings");
+  if(b1) b1.style.display = "block";
+  if(b2) b2.style.display = "block";
+
+  showToast("📲 App lista para instalar");
+});
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  const b1 = document.getElementById("installBtnMission");
+  const b2 = document.getElementById("installBtnSettings");
+  if(b1) b1.style.display = "none";
+  if(b2) b2.style.display = "none";
+  showToast("✅ App instalada");
+});
+window.instalarApp = async function(){
+  if(!deferredInstallPrompt){
+    showToast("ℹ️ Menú ⋮ → Instalar / Añadir a pantalla.");
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const res = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+
+  if(res && res.outcome === "accepted") showToast("✅ Instalación aceptada");
+  else showToast("❌ Instalación cancelada");
+};
+
+/* =========================
+   Service Worker
 ========================= */
 async function refreshPwaStatus(){
   const el = document.getElementById("pwaStatus");
   if(!el) return;
 
   if(!("serviceWorker" in navigator)){
-    el.textContent = "Estado: Service Worker NO disponible en este navegador.";
+    el.textContent = "Estado: Service Worker NO disponible.";
     return;
   }
-
   const reg = await navigator.serviceWorker.getRegistration();
   if(!reg){
-    el.textContent = "Estado: Service Worker NO registrado aún (HTTPS o localhost).";
+    el.textContent = "Estado: SW no registrado aún (HTTPS requerido).";
     return;
   }
-
   const state = reg.active ? "ACTIVO" : (reg.installing ? "INSTALANDO" : "REGISTRADO");
   el.textContent = `Estado: SW ${state} · Cache: ${CACHE_VERSION} · App: ${APP_VERSION}`;
 }
-
-async function verVersion(){
+window.verVersion = async function(){
   await refreshPwaStatus();
-  showToast(`ℹ️ ${APP_VERSION} · cache ${CACHE_VERSION}`);
-}
-
-async function actualizarApp(){
+  showToast(`ℹ️ ${APP_VERSION}`);
+};
+window.actualizarApp = async function(){
   if(!("serviceWorker" in navigator)){
-    showToast("⚠️ No hay Service Worker en este navegador");
+    showToast("⚠️ No hay Service Worker");
     return;
   }
-
   const reg = await navigator.serviceWorker.getRegistration();
   if(!reg){
-    showToast("⚠️ SW no registrado. Usa HTTPS o localhost.");
+    showToast("⚠️ SW no registrado");
     return;
   }
-
   try{
     await reg.update();
-
     if(reg.waiting){
       reg.waiting.postMessage({ type: "SKIP_WAITING" });
       showToast("🔄 Actualizando…");
     }else{
       showToast("🔄 Buscando actualización…");
     }
-
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       window.location.reload();
     }, { once:true });
-
     setTimeout(()=> window.location.reload(), 1200);
   }catch(e){
     console.log(e);
     showToast("⚠️ No se pudo actualizar");
   }
-}
+};
 
-/* ===== Registrar SW (usa sw.js) ===== */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try{
@@ -1793,16 +1339,271 @@ if ("serviceWorker" in navigator) {
 }
 
 /* =========================
+   Timer descanso
+========================= */
+let TIMER = { sec:90, running:false, t:null };
+
+function readRestSettings(){
+  const def = { defaultSec: 90, auto: 1 };
+  try{
+    const obj = JSON.parse(localStorage.getItem(LS_REST) || "null");
+    if(obj && Number.isFinite(obj.defaultSec)) return obj;
+  }catch(e){}
+  return def;
+}
+function writeRestSettings(obj){
+  localStorage.setItem(LS_REST, JSON.stringify(obj));
+}
+function loadRestSettingsUI(){
+  const s = readRestSettings();
+  const inp = document.getElementById("restDefault");
+  const sel = document.getElementById("restAuto");
+  if(inp) inp.value = String(s.defaultSec ?? 90);
+  if(sel) sel.value = String(s.auto ?? 1);
+  TIMER.sec = Number(s.defaultSec ?? 90);
+  updateTimerUI();
+}
+window.saveRestSettings = function(){
+  const inp = document.getElementById("restDefault");
+  const sel = document.getElementById("restAuto");
+  const defSec = Math.max(10, Math.min(600, parseInt(inp?.value || "90",10)));
+  const auto = parseInt(sel?.value || "1",10);
+  writeRestSettings({ defaultSec: defSec, auto: auto ? 1 : 0 });
+  TIMER.sec = defSec;
+  updateTimerUI();
+  showToast("✅ Descanso guardado");
+};
+function updateTimerUI(){
+  const box = document.getElementById("restTimer");
+  const t = document.getElementById("restTime");
+  if(!box || !t) return;
+  const mm = String(Math.floor(TIMER.sec/60)).padStart(2,"0");
+  const ss = String(Math.floor(TIMER.sec%60)).padStart(2,"0");
+  t.textContent = `${mm}:${ss}`;
+}
+function showTimer(show){
+  const box = document.getElementById("restTimer");
+  if(!box) return;
+  box.style.display = show ? "block" : "none";
+}
+function tick(){
+  if(!TIMER.running) return;
+  TIMER.sec = Math.max(0, TIMER.sec - 1);
+  updateTimerUI();
+  if(TIMER.sec <= 0){
+    TIMER.running = false;
+    clearInterval(TIMER.t);
+    TIMER.t = null;
+    showToast("⏱️ Descanso terminado");
+  }
+}
+window.timerStart = function(){
+  if(TIMER.running) return;
+  TIMER.running = true;
+  if(!TIMER.t) TIMER.t = setInterval(tick, 1000);
+  showTimer(true);
+};
+window.timerStop = function(){
+  TIMER.running = false;
+  if(TIMER.t){ clearInterval(TIMER.t); TIMER.t=null; }
+};
+window.timerPlus = function(s){
+  TIMER.sec = Math.min(999, TIMER.sec + Number(s||0));
+  updateTimerUI();
+  showTimer(true);
+};
+window.timerMinus = function(s){
+  TIMER.sec = Math.max(0, TIMER.sec - Number(s||0));
+  updateTimerUI();
+  showTimer(true);
+};
+function restAutoKick(){
+  const s = readRestSettings();
+  if((s.auto ?? 1) !== 1) return;
+  TIMER.sec = Number(s.defaultSec ?? 90);
+  updateTimerUI();
+  showTimer(true);
+  window.timerStart();
+}
+
+/* =========================
+   Gráficos (canvas)
+========================= */
+function getExerciseList(){
+  const log = readLog();
+  const set = new Set(log.map(x=> (x.ejercicio||"").trim()).filter(Boolean));
+  return [...set].sort((a,b)=>a.localeCompare(b));
+}
+
+function renderExerciseSelect(){
+  const sel = document.getElementById("chartExercise");
+  if(!sel) return;
+  const list = getExerciseList();
+  const prev = sel.value;
+  sel.innerHTML = list.map(x=>`<option value="${x}">${x}</option>`).join("");
+  if(list.includes(prev)) sel.value = prev;
+  else if(list.length) sel.value = list[0];
+}
+
+function clearCanvas(ctx){
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+}
+
+function drawAxes(ctx){
+  const w = ctx.canvas.width, h = ctx.canvas.height;
+  ctx.strokeStyle = "rgba(0,255,160,.18)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(30,10); ctx.lineTo(30,h-25);
+  ctx.lineTo(w-10,h-25);
+  ctx.stroke();
+}
+
+function drawLine(ctx, pts){
+  if(pts.length < 2) return;
+  ctx.strokeStyle = "rgba(0,255,160,.9)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
+}
+
+function drawBars(ctx, bars){
+  const w = ctx.canvas.width, h = ctx.canvas.height;
+  const baseY = h-25;
+  ctx.fillStyle = "rgba(0,255,160,.35)";
+  bars.forEach(b=>{
+    ctx.fillRect(b.x, b.y, b.w, baseY-b.y);
+  });
+}
+
+function renderCharts(){
+  renderExerciseSelect();
+  const sel = document.getElementById("chartExercise");
+  if(!sel) return;
+
+  const ex = sel.value;
+  if(!ex) return;
+
+  // e1RM últimos 90 días
+  const log = readLog()
+    .filter(x => norm(x.ejercicio) === norm(ex))
+    .filter(x => (x.tipo||"reps")==="reps")
+    .filter(x => withinLastDays(x.ts||0, 90))
+    .filter(x => Number.isFinite(toNum(x.peso)) && Number.isFinite(toNum(x.reps)) && toNum(x.peso)>0 && toNum(x.reps)>0)
+    .map(x => ({
+      ts: x.ts,
+      date: x.date,
+      e1: e1RM_Epley(toNum(x.peso), toNum(x.reps))
+    }))
+    .filter(x => Number.isFinite(x.e1))
+    .sort((a,b)=>a.ts-b.ts);
+
+  const c1 = document.getElementById("chartE1RM");
+  if(c1){
+    const ctx = c1.getContext("2d");
+    clearCanvas(ctx);
+    drawAxes(ctx);
+
+    if(log.length < 2){
+      ctx.fillStyle = "rgba(215,255,233,.7)";
+      ctx.font = "12px Segoe UI";
+      ctx.fillText("No hay suficientes datos (mínimo 2 series con peso+reps).", 40, 90);
+    }else{
+      const w = ctx.canvas.width, h = ctx.canvas.height;
+      const xs = log.map((_,i)=>i);
+      const ys = log.map(p=>p.e1);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const pad = Math.max(1, (maxY-minY)*0.15);
+
+      const pts = log.map((p,i)=>({
+        x: 30 + (i*(w-45)/(log.length-1)),
+        y: (h-25) - ((p.e1-(minY-pad))/((maxY+pad)-(minY-pad)))*(h-45)
+      }));
+
+      drawLine(ctx, pts);
+
+      ctx.fillStyle = "rgba(215,255,233,.7)";
+      ctx.font = "11px Segoe UI";
+      ctx.fillText(`min ${fmtKg(minY)}kg`, 35, 18);
+      ctx.fillText(`max ${fmtKg(maxY)}kg`, 120, 18);
+      ctx.fillText(`último ${fmtKg(log[log.length-1].e1)}kg`, 220, 18);
+    }
+  }
+
+  // Volumen semanal (8 semanas) del ejercicio seleccionado (tonelaje)
+  const c2 = document.getElementById("chartVOL");
+  if(c2){
+    const ctx = c2.getContext("2d");
+    clearCanvas(ctx);
+    drawAxes(ctx);
+
+    const map = new Map();
+    readLog().forEach(s=>{
+      if(norm(s.ejercicio) !== norm(ex)) return;
+      if((s.tipo||"reps")!=="reps") return;
+      if(!s.date) return;
+      const wk = weekKeyFromISODate(s.date);
+      const cur = map.get(wk) || { ton:0 };
+      const w = toNum(s.peso), r = toNum(s.reps);
+      if(Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) cur.ton += w*r;
+      map.set(wk, cur);
+    });
+
+    const keys = [...map.keys()].sort().slice(-8);
+    const vals = keys.map(k=> map.get(k).ton);
+    const maxV = Math.max(1, ...vals);
+
+    const W = ctx.canvas.width, H = ctx.canvas.height;
+    const baseY = H-25;
+    const barW = (W-45) / Math.max(8, keys.length);
+
+    const bars = keys.map((k,i)=>{
+      const v = map.get(k).ton;
+      const x = 30 + i*barW + 6;
+      const h = (v/maxV) * (H-45);
+      return { x, y: baseY - h, w: Math.max(8, barW-12) };
+    });
+
+    drawBars(ctx, bars);
+
+    ctx.fillStyle = "rgba(215,255,233,.7)";
+    ctx.font = "10px Segoe UI";
+    keys.forEach((k,i)=>{
+      const x = 30 + i*barW + 6;
+      ctx.fillText(k.slice(5), x, H-10); // Wxx
+    });
+  }
+}
+
+/* Cuando cambias select */
+document.addEventListener("change", (e)=>{
+  if(e.target && e.target.id === "chartExercise"){
+    renderCharts();
+  }
+});
+
+/* =========================
+   Ajustes tipo modal (reps/time) ya en bindModal
+========================= */
+
+/* =========================
    INIT
 ========================= */
 document.addEventListener("DOMContentLoaded", ()=>{
+  initScreens();
+  bindNav();
+
+  // fases
   const phases = readPhases();
   writePhases(phases);
   setActivePhase(getActivePhaseId());
 
-  migrateLogIfNeeded();
-  bindModal();
+  // migración
+  migrateIfNeeded();
 
+  // bind import
   const inp = document.getElementById("importFile");
   if(inp){
     inp.addEventListener("change", async (e)=>{
@@ -1811,17 +1612,26 @@ document.addEventListener("DOMContentLoaded", ()=>{
     });
   }
 
+  bindModal();
+
   renderPhasesUI();
   renderWorkoutToday();
   renderLog();
   renderNivel();
   renderStats();
   renderCalendar();
+  renderCharts();
   refreshPwaStatus();
   renderReminder();
-  renderQuickExerciseChips();
-});
-</script>
 
-</body>
-</html>
+  // favs & rest
+  renderFavChips();
+  renderFavsUI();
+  loadRestSettingsUI();
+});
+
+/* Hooks para el selector en el modal */
+document.addEventListener("DOMContentLoaded", ()=>{
+  const mTipo = document.getElementById("mTipo");
+  if(mTipo) mTipo.addEventListener("change", ()=> setTipoUI(mTipo.value));
+});
