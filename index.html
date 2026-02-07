@@ -1,186 +1,239 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Entreno App</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entreno App</title>
 
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./icon-192.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
-<meta name="theme-color" content="#00ff9c">
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <meta name="theme-color" content="#00ff9c">
 
-<style>
-  *{ box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; }
-  body{ margin:0; background:#050a08; color:#d7ffe9; }
-  .app{ max-width:420px; margin:auto; min-height:100vh; display:flex; flex-direction:column; padding:14px; }
+  <style>
+    *{ box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; }
+    body{ margin:0; background:#050a08; color:#d7ffe9; }
+    .app{ max-width:420px; margin:auto; min-height:100vh; display:flex; flex-direction:column; padding:14px; }
 
-  .header{ text-align:center; margin-bottom:12px; }
-  .header h1{ margin:6px 0 2px; color:#00ff9c; }
-  .header p{ margin:0; font-size:13px; opacity:.75; }
+    .header{ text-align:center; margin-bottom:12px; }
+    .header h1{ margin:6px 0 2px; color:#00ff9c; }
+    .header p{ margin:0; font-size:13px; opacity:.75; }
 
-  .status-box{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
-  .status{ flex:1; padding:6px; border-radius:10px; text-align:center; font-size:11px; border:1px solid rgba(0,255,160,.25); }
-  .green{ color:#00ff9c } .yellow{ color:#ffd000 }
+    .status-box{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
+    .status{ flex:1; padding:6px; border-radius:10px; text-align:center; font-size:11px; border:1px solid rgba(0,255,160,.25); }
+    .green{ color:#00ff9c } .yellow{ color:#ffd000 }
 
-  .btn{
-    width:100%; padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.4);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; margin-bottom:10px; font-weight:600;
-  }
-  .btn-main{ background:rgba(0,255,160,.12); border:1px solid #00ff9c; }
+    .btn{
+      width:100%; padding:12px; border-radius:14px;
+      background:rgba(0,0,0,.4);
+      border:1px solid rgba(0,255,160,.25);
+      color:#d7ffe9; margin-bottom:10px; font-weight:600;
+      touch-action: manipulation;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn-main{ background:rgba(0,255,160,.12); border:1px solid #00ff9c; }
 
-  .panel{
-    margin-top:12px; padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.35);
-    border:1px solid rgba(0,255,160,.2);
-  }
+    .panel{
+      margin-top:12px; padding:12px; border-radius:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(0,255,160,.2);
+    }
 
-  .screen{ display:none; }
-  .screen.active{ display:block; }
+    .screen{ display:none; }
+    .screen.active{ display:block; }
 
-  .nav{
-    margin-top:auto; display:flex; justify-content:space-around;
-    padding:10px 0; border-top:1px solid rgba(0,255,160,.2);
-    gap:4px; flex-wrap:wrap;
-  }
-  .nav button{ background:none; border:none; color:#aaa; font-size:12px; padding:6px 4px; }
-  .nav button.active{ color:#00ff9c; font-weight:bold; }
+    .nav{
+      margin-top:auto; display:flex; justify-content:space-around;
+      padding:10px 0; border-top:1px solid rgba(0,255,160,.2);
+      gap:4px; flex-wrap:wrap;
+    }
+    .nav button{ background:none; border:none; color:#aaa; font-size:12px; padding:6px 4px; }
+    .nav button.active{ color:#00ff9c; font-weight:bold; }
 
-  .log-card{
-    padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.30);
-    border:1px solid rgba(0,255,160,.15);
-    margin:10px 0;
-    white-space:pre-wrap;
-  }
-  .log-meta{ opacity:.75; font-size:12px; }
+    .log-card{
+      padding:10px; border-radius:12px;
+      background:rgba(0,0,0,.30);
+      border:1px solid rgba(0,255,160,.15);
+      margin:10px 0;
+      white-space:pre-wrap;
+    }
+    .log-meta{ opacity:.75; font-size:12px; }
 
-  .row{ display:flex; gap:10px; }
-  .row .btn{ width:auto; flex:1; margin-bottom:0; }
+    .row{ display:flex; gap:10px; }
+    .row .btn{ width:auto; flex:1; margin-bottom:0; }
 
-  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
-  .field span{ font-size:12px; opacity:.8; }
-  .field input, .field select{
-    padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.4);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; outline:none;
-  }
-  .field input:focus, .field select:focus{ border-color:#00ff9c; }
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    .field span{ font-size:12px; opacity:.8; }
+    .field input, .field select{
+      padding:12px; border-radius:14px;
+      background:rgba(0,0,0,.4);
+      border:1px solid rgba(0,255,160,.25);
+      color:#d7ffe9; outline:none;
+    }
+    .field input:focus, .field select:focus{ border-color:#00ff9c; }
 
-  .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,0,0,.65);
-    display:none; align-items:flex-end; justify-content:center;
-    padding:14px; z-index:9999;
-  }
-  .modal-backdrop.show{ display:flex; }
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.65);
+      display:none; align-items:flex-end; justify-content:center;
+      padding:14px; z-index:9999;
+    }
+    .modal-backdrop.show{ display:flex; }
 
-  .modal{
-    width:100%; max-width:420px; background:#050a08;
-    border:1px solid rgba(0,255,160,.25);
-    border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.6);
-    overflow:hidden; transform:translateY(10px);
-  }
+    .modal{
+      width:100%; max-width:420px; background:#050a08;
+      border:1px solid rgba(0,255,160,.25);
+      border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.6);
+      overflow:hidden; transform:translateY(10px);
+    }
 
-  .modal-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:12px 12px 10px; border-bottom:1px solid rgba(0,255,160,.15);
-  }
-  .modal-title{ font-weight:800; color:#00ff9c; letter-spacing:.5px; }
-  .modal-close{
-    background:transparent; border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; border-radius:12px; padding:6px 10px;
-  }
-  .modal-body{ padding:12px; }
-  .modal-actions{
-    display:flex; gap:10px; padding:12px;
-    border-top:1px solid rgba(0,255,160,.15);
-  }
-  .modal-actions .btn{ flex:1; margin:0; }
+    .modal-head{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 12px 10px; border-bottom:1px solid rgba(0,255,160,.15);
+    }
+    .modal-title{ font-weight:800; color:#00ff9c; letter-spacing:.5px; }
+    .modal-close{
+      background:transparent; border:1px solid rgba(0,255,160,.25);
+      color:#d7ffe9; border-radius:12px; padding:6px 10px;
+      touch-action: manipulation;
+    }
+    .modal-body{ padding:12px; }
+    .modal-actions{
+      display:flex; gap:10px; padding:12px;
+      border-top:1px solid rgba(0,255,160,.15);
+    }
+    .modal-actions .btn{ flex:1; margin:0; }
 
-  .toast{
-    position:fixed; left:50%; bottom:78px; transform:translateX(-50%);
-    background:rgba(0,0,0,.85);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; padding:10px 14px; border-radius:14px;
-    z-index:10000; display:none;
-  }
+    .toast{
+      position:fixed; left:50%; bottom:78px; transform:translateX(-50%);
+      background:rgba(0,0,0,.85);
+      border:1px solid rgba(0,255,160,.25);
+      color:#d7ffe9; padding:10px 14px; border-radius:14px;
+      z-index:10000; display:none;
+    }
 
-  .mini-actions{ display:flex; gap:8px; margin-top:10px; }
-  .mini{
-    flex:1; padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.35);
-    border:1px solid rgba(0,255,160,.18);
-    color:#d7ffe9; font-weight:600;
-  }
-  .mini.danger{ border-color:rgba(255,80,80,.6); }
+    .mini-actions{ display:flex; gap:8px; margin-top:10px; }
+    .mini{
+      flex:1; padding:10px; border-radius:12px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(0,255,160,.18);
+      color:#d7ffe9; font-weight:600;
+      touch-action: manipulation;
+    }
+    .mini:active{ transform: translateY(1px); }
+    .mini.danger{ border-color:rgba(255,80,80,.6); }
 
-  .kpi-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
-  .kpi{
-    padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.28);
-    border:1px solid rgba(0,255,160,.12);
-  }
-  .kpi .k{ font-size:12px; opacity:.8; }
-  .kpi .v{ font-size:18px; font-weight:800; margin-top:4px; color:#00ff9c; }
+    .kpi-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
+    .kpi{
+      padding:10px; border-radius:12px;
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(0,255,160,.12);
+    }
+    .kpi .k{ font-size:12px; opacity:.8; }
+    .kpi .v{ font-size:18px; font-weight:800; margin-top:4px; color:#00ff9c; }
 
-  .table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
-  .table th, .table td{
-    border-bottom:1px solid rgba(0,255,160,.12);
-    padding:8px 6px;
-    text-align:left;
-    vertical-align:top;
-  }
-  .table th{ color:#00ff9c; font-weight:800; }
-  .pill{
-    display:inline-block; padding:4px 8px; border-radius:999px;
-    border:1px solid rgba(0,255,160,.2);
-    background:rgba(0,255,160,.08);
-    font-size:11px; opacity:.95;
-  }
-  .muted{ opacity:.75; }
+    .table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
+    .table th, .table td{
+      border-bottom:1px solid rgba(0,255,160,.12);
+      padding:8px 6px;
+      text-align:left;
+      vertical-align:top;
+    }
+    .table th{ color:#00ff9c; font-weight:800; }
+    .pill{
+      display:inline-block; padding:4px 8px; border-radius:999px;
+      border:1px solid rgba(0,255,160,.2);
+      background:rgba(0,255,160,.08);
+      font-size:11px; opacity:.95;
+    }
+    .muted{ opacity:.75; }
 
-  .banner{
-    margin-top:12px;
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px solid rgba(0,255,160,.18);
-    background:rgba(0,255,160,.06);
-  }
-  .banner .t{ color:#00ff9c; font-weight:800; margin-bottom:4px; }
-  .banner .s{ font-size:12px; opacity:.85; line-height:1.3; }
+    .banner{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(0,255,160,.18);
+      background:rgba(0,255,160,.06);
+    }
+    .banner .t{ color:#00ff9c; font-weight:800; margin-bottom:4px; }
+    .banner .s{ font-size:12px; opacity:.85; line-height:1.3; }
 
-  #installBtnMission, #installBtnSettings { display:none; }
+    #installBtnMission, #installBtnSettings { display:none; }
 
-  .week-grid{
-    display:grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap:8px;
-    margin-top:10px;
-  }
-  .day{
-    padding:10px 6px;
-    border-radius:12px;
-    background:rgba(0,0,0,.25);
-    border:1px solid rgba(0,255,160,.12);
-    text-align:center;
-    min-height:64px;
-  }
-  .day .d{ font-weight:800; color:#00ff9c; font-size:12px; }
-  .day .n{ font-size:12px; margin-top:6px; }
-  .day .m{ font-size:11px; opacity:.75; margin-top:4px; }
-  .day.done{ border-color: rgba(0,255,160,.35); background: rgba(0,255,160,.08); }
-  .day.today{ outline:2px solid rgba(255,208,0,.55); }
-  .chip{
-    display:inline-block; margin-top:6px;
-    font-size:10px; padding:3px 6px;
-    border-radius:999px;
-    border:1px solid rgba(0,255,160,.22);
-    background:rgba(0,255,160,.08);
-  }
-</style>
+    .week-grid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+      margin-top:10px;
+    }
+    .day{
+      padding:10px 6px;
+      border-radius:12px;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(0,255,160,.12);
+      text-align:center;
+      min-height:64px;
+    }
+    .day .d{ font-weight:800; color:#00ff9c; font-size:12px; }
+    .day .n{ font-size:12px; margin-top:6px; }
+    .day .m{ font-size:11px; opacity:.75; margin-top:4px; }
+    .day.done{
+      border-color: rgba(0,255,160,.35);
+      background: rgba(0,255,160,.08);
+    }
+    .day.today{
+      outline:2px solid rgba(255,208,0,.55);
+    }
+    .chip{
+      display:inline-block; margin-top:6px;
+      font-size:10px; padding:3px 6px;
+      border-radius:999px;
+      border:1px solid rgba(0,255,160,.22);
+      background:rgba(0,255,160,.08);
+    }
+
+    /* CORE PRO */
+    .core-tools{ display:flex; gap:8px; margin-top:8px; }
+    .core-tools .mini{ flex:1; }
+    .timer-read{ margin-top:6px; font-size:12px; opacity:.85; }
+
+    /* CORE templates */
+    .core-templates{
+      margin-top:6px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .core-templates .chipbtn{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(0,255,160,.22);
+      background:rgba(0,255,160,.08);
+      color:#d7ffe9;
+      font-size:12px;
+      font-weight:700;
+      touch-action: manipulation;
+    }
+    .core-templates .chipbtn:active{ transform: translateY(1px); }
+
+    /* Charts */
+    .chart{
+      width:100%;
+      height:180px;
+      border-radius:12px;
+      background:rgba(0,0,0,.20);
+      border:1px solid rgba(0,255,160,.12);
+      margin-top:10px;
+      display:block;
+    }
+    .chart-title{
+      margin:10px 0 0;
+      font-weight:800;
+      color:#00ff9c;
+      font-size:12px;
+      letter-spacing:.3px;
+    }
+  </style>
 </head>
 
 <body>
@@ -193,7 +246,7 @@
     <div class="status-box">
       <div class="status green">● STATUS: OK</div>
       <div class="status yellow">● OBJETIVO: FUERZA MAGRA</div>
-      <div class="status green">● SYNC: LOCAL</div>
+      <div class="status green">● SYNC: CAPACITOR</div>
     </div>
 
     <div id="screen-mision" class="screen active">
@@ -260,6 +313,11 @@
         <h3>HISTORIAL DE SERIES</h3>
         <p id="logEmptyHint" class="log-meta">Sin registros aún. Pulsa “REGISTRAR SERIE”.</p>
 
+        <label class="field" style="margin-top:10px;">
+          <span>Buscar ejercicio</span>
+          <input id="logSearch" type="text" placeholder="Ej: plancha, prensa, remo..." />
+        </label>
+
         <div class="row" style="margin:10px 0;">
           <button class="btn" style="border-color: rgba(255,80,80,.6);" onclick="borrarHistorial()">Borrar historial</button>
           <button class="btn" onclick="exportarCSV()">Exportar CSV</button>
@@ -273,19 +331,28 @@
       <div class="panel">
         <h3>NIVEL + ESTADÍSTICAS</h3>
         <div id="nivelBox" class="log-card"></div>
-
         <div class="kpi-grid" id="kpiGrid"></div>
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">PRs e1RM (estimado)</h3>
-          <div class="log-meta">Cálculo e1RM: <span class="pill">Epley</span> (peso × (1 + reps/30))</div>
+          <div class="log-meta">e1RM solo para series por <span class="pill">reps</span>. CORE (tiempo) no entra aquí.</div>
           <div id="prBox"></div>
         </div>
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">Top ejercicios (últimos 28 días)</h3>
-          <div class="log-meta">Series y tonelaje (peso×reps). Si no pones peso, no suma tonelaje.</div>
+          <div class="log-meta">Barras por volumen. CORE usa: lastre × segundos.</div>
+          <canvas id="topChart" class="chart"></canvas>
           <div id="topBox"></div>
+        </div>
+
+        <!-- NUEVO: CORE PRs -->
+        <div class="panel" style="margin-top:10px;">
+          <h3 style="margin:0 0 8px;">CORE · Récords + Progreso</h3>
+          <div class="log-meta">Mejor tiempo y mejor tiempo con lastre por ejercicio + gráfico semanal (8 semanas).</div>
+          <div id="corePrBox"></div>
+          <div class="chart-title">Progreso CORE semanal (8 semanas)</div>
+          <canvas id="coreWeeklyChart" class="chart"></canvas>
         </div>
       </div>
     </div>
@@ -294,17 +361,22 @@
       <div class="panel">
         <h3>STATS PRO</h3>
         <div class="log-meta" id="statsMeta"></div>
+
         <div class="kpi-grid" id="statsKpis"></div>
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">Prioridades (últimos 28 días)</h3>
-          <div class="log-meta">Series y volumen estimado (si hay peso). Clasificación por nombre del ejercicio.</div>
+          <div class="log-meta">Barras por series y volumen estimado (si hay lastre/peso).</div>
+          <canvas id="prioChart" class="chart"></canvas>
           <div id="prioBox"></div>
         </div>
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">Volumen semanal (últimas 8 semanas)</h3>
-          <div class="log-meta">Tonnage = peso×reps. Si faltan pesos, solo cuenta series.</div>
+          <div class="log-meta">Tonelaje: reps -> peso×reps | CORE -> lastre×segundos.</div>
+          <canvas id="weeklyTonChart" class="chart"></canvas>
+          <div class="chart-title">Series semanales (8 semanas)</div>
+          <canvas id="weeklySetsChart" class="chart"></canvas>
           <div id="weeklyBox"></div>
         </div>
       </div>
@@ -400,6 +472,7 @@
     </div>
   </div>
 
+  <!-- ===== MODAL (SERIE + CORE PRO) ===== -->
   <div id="modal" class="modal-backdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-label="Registrar serie">
       <div class="modal-head">
@@ -408,32 +481,56 @@
       </div>
 
       <div class="modal-body">
-        <label class="field">
+        <div class="row">
+          <label class="field" style="flex:1;">
+            <span>Modo</span>
+            <select id="mMode">
+              <option value="reps">Reps</option>
+              <option value="time">CORE (Tiempo)</option>
+            </select>
+          </label>
+          <label class="field" style="flex:1;">
+            <span>Serie nº</span>
+            <input id="mSerie" type="number" inputmode="numeric" placeholder="1" min="1" step="1" />
+          </label>
+        </div>
+
+        <!-- NUEVO: plantillas CORE -->
+        <div class="log-meta">Plantillas CORE (toca una para rellenar rápido)</div>
+        <div class="core-templates" id="coreTemplates"></div>
+
+        <label class="field" style="margin-top:10px;">
           <span>Ejercicio</span>
-          <input id="mEjercicio" type="text" placeholder="Ej: Prensa inclinada" />
+          <input id="mEjercicio" type="text" placeholder="Ej: Plancha lastrada" />
         </label>
 
         <div class="row">
           <label class="field" style="flex:1;">
-            <span>Peso (kg)</span>
-            <input id="mPeso" type="number" inputmode="decimal" placeholder="0" />
+            <span>Peso (kg) / lastre</span>
+            <input id="mPeso" type="number" inputmode="decimal" placeholder="0" step="0.5" />
           </label>
-          <label class="field" style="flex:1;">
+
+          <label class="field" style="flex:1;" id="repsField">
             <span>Reps</span>
-            <input id="mReps" type="number" inputmode="numeric" placeholder="0" />
+            <input id="mReps" type="number" inputmode="numeric" placeholder="0" min="0" step="1" />
+          </label>
+
+          <label class="field" style="flex:1; display:none;" id="timeField">
+            <span>Tiempo (seg)</span>
+            <input id="mSeconds" type="number" inputmode="numeric" placeholder="30" min="0" step="5" />
+            <div class="timer-read" id="timerRead"></div>
+            <div class="core-tools">
+              <button type="button" class="mini" id="tMinus">-10s</button>
+              <button type="button" class="mini" id="tStartStop">Start</button>
+              <button type="button" class="mini" id="tPlus">+10s</button>
+            </div>
           </label>
         </div>
 
-        <div class="row">
-          <label class="field" style="flex:1;">
-            <span>Serie nº</span>
-            <input id="mSerie" type="number" inputmode="numeric" placeholder="1" />
-          </label>
-          <label class="field" style="flex:1;">
-            <span>RPE (opcional)</span>
-            <input id="mRpe" type="number" inputmode="decimal" placeholder="8" step="0.5" min="0" max="10" />
-          </label>
-        </div>
+        <label class="field">
+          <span>RPE (opcional)</span>
+          <input id="mRpe" type="number" inputmode="decimal" placeholder="8" step="0.5" min="0" max="10" />
+        </label>
       </div>
 
       <div class="modal-actions">
@@ -449,11 +546,11 @@
     /* =========================
        VERSIONES
     ========================= */
-    const APP_VERSION = "BilboPro-PWA 1.2.0";
-    const CACHE_VERSION = "bilbo-pro-v3"; // debe coincidir con sw.js
+    const APP_VERSION = "Entreno-PWA 1.5.0";
+    const CACHE_VERSION = "bilbo-pro-v6"; // debe coincidir con sw.js
 
     /* =========================
-       INSTALL: beforeinstallprompt
+       INSTALL
     ========================= */
     let deferredInstallPrompt = null;
 
@@ -480,7 +577,7 @@
 
     async function instalarApp(){
       if(!deferredInstallPrompt){
-        showToast("ℹ️ Menú ⋮ → Instalar app / Añadir a pantalla");
+        showToast("ℹ️ Menú ⋮ → Instalar / Añadir a pantalla.");
         return;
       }
       deferredInstallPrompt.prompt();
@@ -510,6 +607,10 @@
       const n = Number(String(v ?? "").replace(",", "."));
       return Number.isFinite(n) ? n : NaN;
     }
+    function toIntSafe(v, fallback=0){
+      const n = parseFloat(String(v ?? "").replace(",", "."));
+      return Number.isFinite(n) ? Math.round(n) : fallback;
+    }
     function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
     function startOfWeekISO(date = new Date()){
       const d = new Date(date);
@@ -528,9 +629,16 @@
       const [y,m,d] = isoDate.split("-");
       return `${d}/${m}`;
     }
+    function fmtTime(seconds){
+      const s = Math.max(0, toIntSafe(seconds, 0));
+      const mm = Math.floor(s/60);
+      const ss = s % 60;
+      return mm > 0 ? `${mm}:${String(ss).padStart(2,"0")}` : `${ss}s`;
+    }
+    function norm(s){ return String(s||"").toLowerCase().trim(); }
 
     /* =========================
-       NAV + PANTALLAS
+       NAV
     ========================= */
     const screens = {
       mision: document.getElementById("screen-mision"),
@@ -568,7 +676,7 @@
     });
 
     /* =========================
-       BILBO PRO 4D
+       PLAN
     ========================= */
     const splitDays = [
       { key:"D1", name:"D1 · Empuje + Gemelo", focus:"Pecho/Hombro/Tríceps + Gemelo (prioridad)" },
@@ -611,6 +719,7 @@
       return map[dow];
     }
 
+    /* Override manual hoy */
     const LS_DAY_OVERRIDE = "bilbo_day_override_v1";
     function getDayOverrideForToday(){
       try{
@@ -675,7 +784,7 @@
 
       const qe = document.getElementById("quickExercise");
       if(qe && !qe.value){
-        const defaults = { D1:"Press pecho máquina/mancuernas", D2:"Remo con pecho apoyado", D3:"Prensa inclinada", D4:"Press inclinado ligero" };
+        const defaults = { D1:"Press pecho máquina/mancuernas", D2:"Remo con pecho apoyado", D3:"Prensa inclinada", D4:"Plancha (core)" };
         qe.value = defaults[w.key] || "";
       }
       syncOverrideUI();
@@ -695,9 +804,7 @@
     const LS_PHASES = "bilbo_phases_v1";
     const LS_ACTIVE_PHASE = "bilbo_active_phase_v1";
 
-    function defaultPhases(){
-      return [{ id:"phase_default", name:"Fase principal", createdAt: Date.now() }];
-    }
+    function defaultPhases(){ return [{ id:"phase_default", name:"Fase principal", createdAt: Date.now() }]; }
     function readPhases(){
       try{
         const arr = JSON.parse(localStorage.getItem(LS_PHASES) || "null");
@@ -724,15 +831,12 @@
     function renderPhasesUI(){
       const sel = document.getElementById("phaseSelect");
       if(!sel) return;
-
       const phases = readPhases();
       const activeId = getActivePhaseId();
       sel.innerHTML = phases.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
       sel.value = activeId;
-
       renderPhaseHint();
     }
-
     function setActivePhaseFromUI(){
       const sel = document.getElementById("phaseSelect");
       if(!sel) return;
@@ -740,51 +844,41 @@
       showToast("✅ Fase activa cambiada");
       renderPhaseHint();
       renderReminder();
-      if(screens.stats.classList.contains("active")) renderStats();
-      if(screens.nivel.classList.contains("active")) renderNivel();
+      renderLog(); renderNivel(); renderStats(); renderCalendar();
     }
-
     function crearFase(){
       const name = prompt("Nombre de la nueva fase:", "Fase nueva");
       if(!name) return;
-
       const phases = readPhases();
       const id = "phase_" + uid();
       phases.push({ id, name: name.trim(), createdAt: Date.now() });
       writePhases(phases);
       setActivePhase(id);
-
       renderPhasesUI();
       showToast("✅ Fase creada y activada");
     }
-
     function borrarFaseActiva(){
       const active = getActivePhase();
-      if(active.id === "phase_default"){
-        showToast("⚠️ No puedes borrar la fase principal");
-        return;
-      }
+      if(active.id === "phase_default"){ showToast("⚠️ No puedes borrar la fase principal"); return; }
       if(!confirm(`¿Borrar fase "${active.name}"?`)) return;
-
       const phases = readPhases().filter(p=>p.id !== active.id);
       writePhases(phases);
       setActivePhase(phases[0].id);
-
       renderPhasesUI();
       showToast("🗑️ Fase borrada");
     }
-
     function renderPhaseHint(){
       const el = document.getElementById("phaseHint");
       if(!el) return;
-      const p = getActivePhase();
-      el.textContent = `Fase activa: ${p.name}`;
+      el.textContent = `Fase activa: ${getActivePhase().name}`;
     }
 
     /* =========================
-       LOG
+       LOG (v3)
     ========================= */
+    const LS_LOG_V1 = "bilbo_log_v1";
     const LS_LOG = "bilbo_log_v3";
+    const LS_MIGRATED = "bilbo_log_migrated_to_v3";
     const LS_MISSION = "bilbo_mission_v1";
 
     function safeParse(key){
@@ -796,7 +890,6 @@
       return Array.isArray(arr) ? arr : [];
     }
     function writeLogAll(arr){ localStorage.setItem(LS_LOG, JSON.stringify(arr)); }
-
     function readLog(){
       const all = readLogAll();
       const pid = getActivePhaseId();
@@ -809,32 +902,157 @@
       writeLogAll([...withPhase, ...all].sort((a,b)=> (b.ts||0)-(a.ts||0)));
     }
 
+    function migrateLogIfNeeded(){
+      if(localStorage.getItem(LS_MIGRATED) === "1") return;
+
+      const v3 = safeParse(LS_LOG);
+      if(Array.isArray(v3) && v3.length > 0){
+        localStorage.setItem(LS_MIGRATED, "1");
+        return;
+      }
+
+      const candidates = ["bilbo_log_v2", LS_LOG_V1];
+      let source = [];
+      for(const k of candidates){
+        const arr = safeParse(k);
+        if(Array.isArray(arr) && arr.length){ source = arr; break; }
+      }
+
+      if(!Array.isArray(source) || source.length === 0){
+        localStorage.setItem(LS_MIGRATED, "1");
+        return;
+      }
+
+      const phases = readPhases();
+      writePhases(phases);
+      setActivePhase(getActivePhaseId());
+
+      const converted = source.map((it) => ({
+        id: it.id || uid(),
+        ts: it.ts ? Number(it.ts) : Date.now(),
+        date: it.date || "",
+        day: it.day || "",
+        dayName: it.dayName || "",
+        ejercicio: it.ejercicio || "",
+        peso: it.peso || "",
+        reps: it.reps || "",
+        seconds: it.seconds || "",
+        mode: it.mode || (it.seconds ? "time" : "reps"),
+        serie: it.serie || "",
+        rpe: it.rpe || "",
+        phaseId: it.phaseId || "phase_default"
+      }));
+
+      writeLogAll(converted);
+      localStorage.setItem(LS_MIGRATED, "1");
+      showToast(`✅ Migrado historial: ${converted.length} series`);
+    }
+
     /* =========================
-       MODAL
+       MODAL + CORE PRO
     ========================= */
     let EDITING_ID = null;
+    let TIMER = { running:false, interval:null, endTs:0 };
+
+    const CORE_TEMPLATES = [
+      { label:"Plancha", value:"Plancha (core)" },
+      { label:"Hollow", value:"Hollow hold" },
+      { label:"Side plank", value:"Plancha lateral" },
+      { label:"Pallof", value:"Pallof press" },
+      { label:"Anti-rotación", value:"Anti-rotación (cable/banda)" }
+    ];
+
+    function stopTimer(){
+      TIMER.running = false;
+      if(TIMER.interval) clearInterval(TIMER.interval);
+      TIMER.interval = null;
+      TIMER.endTs = 0;
+      const btn = document.getElementById("tStartStop");
+      if(btn) btn.textContent = "Start";
+    }
+
+    function updateTimerRead(){
+      const read = document.getElementById("timerRead");
+      const secInput = document.getElementById("mSeconds");
+      if(!read || !secInput) return;
+      const s = toIntSafe(secInput.value, 0);
+      read.textContent = s > 0 ? `Tiempo: ${fmtTime(s)}` : "";
+    }
+
+    function setModeUI(mode){
+      const repsField = document.getElementById("repsField");
+      const timeField = document.getElementById("timeField");
+      if(!repsField || !timeField) return;
+
+      if(mode === "time"){
+        repsField.style.display = "none";
+        timeField.style.display = "block";
+      }else{
+        timeField.style.display = "none";
+        repsField.style.display = "block";
+      }
+      stopTimer();
+      updateTimerRead();
+    }
+
+    function applyCoreTemplate(text){
+      const modeSel = document.getElementById("mMode");
+      const ex = document.getElementById("mEjercicio");
+      if(modeSel) modeSel.value = "time";
+      setModeUI("time");
+      if(ex) ex.value = text;
+      showToast("✅ Plantilla CORE aplicada");
+    }
+
+    function renderCoreTemplates(){
+      const box = document.getElementById("coreTemplates");
+      if(!box) return;
+      box.innerHTML = CORE_TEMPLATES.map(t =>
+        `<button type="button" class="chipbtn" data-core="${t.value}">${t.label}</button>`
+      ).join("");
+
+      box.querySelectorAll("button[data-core]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const v = btn.getAttribute("data-core") || "";
+          applyCoreTemplate(v);
+        });
+      });
+    }
 
     function abrirModalSerie(ejercicio = "", prefill = null){
       const modal = document.getElementById("modal");
       const title = document.getElementById("modalTitle");
+      const modeSel = document.getElementById("mMode");
 
       if(prefill){
         EDITING_ID = prefill.id || null;
         title.textContent = "EDITAR SERIE";
+
+        modeSel.value = prefill.mode || (prefill.seconds ? "time" : "reps");
+        document.getElementById("mSerie").value = prefill.serie || "1";
         document.getElementById("mEjercicio").value = prefill.ejercicio || "";
         document.getElementById("mPeso").value = prefill.peso || "";
-        document.getElementById("mReps").value = prefill.reps || "";
-        document.getElementById("mSerie").value = prefill.serie || "1";
+        document.getElementById("mReps").value = (modeSel.value==="reps") ? (prefill.reps || "") : "";
+        document.getElementById("mSeconds").value = prefill.seconds || (modeSel.value==="time" ? (prefill.reps || "30") : "30");
         document.getElementById("mRpe").value = prefill.rpe || "";
       }else{
         EDITING_ID = null;
         title.textContent = "REGISTRAR SERIE";
+        const det = String(ejercicio||"").toLowerCase();
+        const autoMode =
+          (det.includes("plancha") || det.includes("core") || det.includes("hold") || det.includes("isométr") || det.includes("isometr") ||
+           det.includes("pallof") || det.includes("anti-rot")) ? "time" : "reps";
+
+        modeSel.value = autoMode;
+        document.getElementById("mSerie").value = "1";
         document.getElementById("mEjercicio").value = ejercicio || "";
         document.getElementById("mPeso").value = "";
         document.getElementById("mReps").value = "";
-        document.getElementById("mSerie").value = "1";
+        document.getElementById("mSeconds").value = "30";
         document.getElementById("mRpe").value = "";
       }
+
+      setModeUI(modeSel.value);
 
       modal.classList.add("show");
       modal.setAttribute("aria-hidden","false");
@@ -843,6 +1061,7 @@
     }
 
     function cerrarModalSerie(){
+      stopTimer();
       const modal = document.getElementById("modal");
       modal.classList.remove("show");
       modal.setAttribute("aria-hidden","true");
@@ -855,29 +1074,85 @@
       const save = document.getElementById("modalSave");
       const backdrop = document.getElementById("modal");
 
+      const modeSel = document.getElementById("mMode");
+      const secInput = document.getElementById("mSeconds");
+      const minus = document.getElementById("tMinus");
+      const plus = document.getElementById("tPlus");
+      const startStop = document.getElementById("tStartStop");
+
       close.onclick = cerrarModalSerie;
       cancel.onclick = cerrarModalSerie;
 
-      backdrop.addEventListener("click", (e)=>{
-        if(e.target === backdrop) cerrarModalSerie();
+      backdrop.addEventListener("click", (e)=>{ if(e.target === backdrop) cerrarModalSerie(); });
+      document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && backdrop.classList.contains("show")) cerrarModalSerie(); });
+
+      modeSel.addEventListener("change", ()=> setModeUI(modeSel.value));
+      secInput.addEventListener("input", ()=> { stopTimer(); updateTimerRead(); });
+
+      minus.addEventListener("click", ()=>{
+        const cur = toIntSafe(secInput.value, 0);
+        secInput.value = Math.max(0, cur - 10);
+        stopTimer(); updateTimerRead();
+      });
+      plus.addEventListener("click", ()=>{
+        const cur = toIntSafe(secInput.value, 0);
+        secInput.value = Math.max(0, cur + 10);
+        stopTimer(); updateTimerRead();
       });
 
-      document.addEventListener("keydown", (e)=>{
-        if(e.key === "Escape" && backdrop.classList.contains("show")){
-          cerrarModalSerie();
+      startStop.addEventListener("click", ()=>{
+        if(modeSel.value !== "time") return;
+
+        const total = toIntSafe(secInput.value, 0);
+        if(total <= 0){ showToast("⚠️ Pon un tiempo > 0"); return; }
+
+        if(!TIMER.running){
+          TIMER.running = true;
+          TIMER.endTs = Date.now() + (total * 1000);
+          startStop.textContent = "Stop";
+
+          TIMER.interval = setInterval(()=>{
+            const left = Math.max(0, Math.ceil((TIMER.endTs - Date.now())/1000));
+            secInput.value = left;
+            updateTimerRead();
+            if(left <= 0){
+              stopTimer();
+              showToast("⏱️ Tiempo completado");
+              try { navigator.vibrate && navigator.vibrate([80,50,80]); } catch(e){}
+            }
+          }, 250);
+        }else{
+          stopTimer();
+          updateTimerRead();
         }
       });
 
       save.onclick = ()=>{
+        const mode = modeSel.value;
+
         const ejercicio = document.getElementById("mEjercicio").value.trim();
         const peso = document.getElementById("mPeso").value;
-        const reps = document.getElementById("mReps").value;
         const serie = document.getElementById("mSerie").value;
         const rpe = document.getElementById("mRpe").value;
 
-        if(!ejercicio || !reps || !serie){
-          showToast("⚠️ Completa: ejercicio, reps y serie");
-          return;
+        const repsVal = document.getElementById("mReps").value;
+        const secVal = document.getElementById("mSeconds").value;
+
+        if(!ejercicio || !serie){ showToast("⚠️ Completa: ejercicio y serie"); return; }
+
+        let repsToStore = "";
+        let secondsToStore = "";
+
+        if(mode === "reps"){
+          if(!repsVal){ showToast("⚠️ Indica reps"); return; }
+          repsToStore = String(repsVal);
+          secondsToStore = "";
+        }else{
+          const s = toIntSafe(secVal, 0);
+          if(s <= 0){ showToast("⚠️ Indica tiempo (seg)"); return; }
+          secondsToStore = String(s);
+          // compatibilidad: reps = seconds
+          repsToStore = String(s);
         }
 
         const w = workoutToday();
@@ -888,7 +1163,16 @@
           const idx = log.findIndex(x => x.id === EDITING_ID);
           if(idx >= 0){
             const prev = log[idx];
-            log[idx] = { ...prev, ejercicio, peso: peso || "", reps: reps || "", serie: serie || "", rpe: rpe || "" };
+            log[idx] = {
+              ...prev,
+              ejercicio,
+              peso: peso || "",
+              reps: repsToStore || "",
+              seconds: secondsToStore || "",
+              mode,
+              serie: serie || "",
+              rpe: rpe || ""
+            };
             writeLogForActivePhase(log);
             cerrarModalSerie();
             renderLog(); renderNivel(); renderStats(); renderCalendar();
@@ -905,7 +1189,9 @@
           dayName: w.name,
           ejercicio,
           peso: peso || "",
-          reps: reps || "",
+          reps: repsToStore || "",
+          seconds: secondsToStore || "",
+          mode,
           serie: serie || "",
           rpe: rpe || "",
           phaseId: pid
@@ -927,14 +1213,20 @@
     }
 
     /* =========================
-       LOG UI
+       LOG UI + SEARCH
     ========================= */
     function renderLog(){
       const list = document.getElementById("logList");
       const hint = document.getElementById("logEmptyHint");
       if(!list) return;
 
-      const log = readLog();
+      const q = norm(document.getElementById("logSearch")?.value || "");
+      let log = readLog();
+
+      if(q){
+        log = log.filter(it => norm(it.ejercicio).includes(q));
+      }
+
       list.innerHTML = "";
       if(hint) hint.style.display = log.length ? "none" : "block";
 
@@ -946,8 +1238,12 @@
         const line1 = `${it.dayName || it.day || ""}`;
         const line2 = `📅 ${it.date || ""} · ${time}`;
         const line3 = `${it.ejercicio || ""}`;
+
+        const isTime = (it.mode === "time") || (!!it.seconds);
+        const corePart = isTime ? ` · ${fmtTime(it.seconds || it.reps)}` : ` · ${it.reps || "-"} reps`;
         const line4 =
-          `Serie ${it.serie || "-"} · ${it.peso || "-"} kg · ${it.reps || "-"} reps` +
+          `Serie ${it.serie || "-"} · ${it.peso || "-"} kg` +
+          corePart +
           (it.rpe ? ` · RPE ${it.rpe}` : "");
 
         div.textContent = `${line1}\n${line2}\n${line3}\n${line4}`;
@@ -1001,7 +1297,7 @@
 
     function exportarCSV(){
       const log = readLog();
-      const header = ["fecha","dia_key","dia_nombre","ejercicio","serie","peso_kg","reps","rpe","timestamp","id","fase"];
+      const header = ["fecha","dia_key","dia_nombre","ejercicio","serie","peso_kg","reps","seconds","mode","rpe","timestamp","id","fase"];
       const phaseName = getActivePhase().name;
 
       const rows = log.map(it => ([
@@ -1012,6 +1308,8 @@
         it.serie || "",
         it.peso || "",
         it.reps || "",
+        it.seconds || "",
+        it.mode || "",
         it.rpe || "",
         it.ts ? new Date(it.ts).toISOString() : "",
         it.id || "",
@@ -1023,7 +1321,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `bilbo_log_${phaseName.replace(/\s+/g,"_")}_${todayISO()}.csv`;
+      a.download = `entreno_log_${phaseName.replace(/\s+/g,"_")}_${todayISO()}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1033,8 +1331,7 @@
     }
 
     /* =========================
-       e1RM + STATS (igual que tenías)
-       (lo dejo tal cual para no alargar más; está ya OK)
+       STATS ENGINE
     ========================= */
     function e1RM_Epley(weight, reps){
       const w = toNum(weight);
@@ -1043,18 +1340,58 @@
       const rr = clamp(r, 1, 30);
       return w * (1 + (rr / 30));
     }
+
     function withinLastDays(ts, days){
       const ms = days * 24 * 60 * 60 * 1000;
       return (Date.now() - ts) <= ms;
     }
+
     function fmtKg(n){
       if(!Number.isFinite(n)) return "-";
       const v = Math.round(n * 10) / 10;
       return `${v}`;
     }
+
+    function classifyPriority(ex){
+      const e = norm(ex);
+      if(e.includes("gemelo") || e.includes("calf")) return "gemelos";
+      if(e.includes("antebra") || e.includes("muñeca") || e.includes("muneca") || e.includes("forearm") || e.includes("reverse curl")) return "antebrazos";
+      if(e.includes("cuello") || e.includes("neck")) return "cuello";
+      return null;
+    }
+
+    function weekKeyFromISODate(isoDate){
+      const d = new Date(isoDate + "T00:00:00");
+      const monday = startOfWeekISO(d);
+      const y = monday.getFullYear();
+      const jan4 = new Date(y,0,4);
+      const jan4Mon = startOfWeekISO(jan4);
+      const diff = (monday - jan4Mon) / (7*24*60*60*1000);
+      const wk = Math.floor(diff) + 1;
+      return `${y}-W${String(wk).padStart(2,"0")}`;
+    }
+
+    function isCore(it){
+      const e = norm(it.ejercicio);
+      return (it.mode === "time") || !!it.seconds ||
+        e.includes("plancha") || e.includes("hollow") || e.includes("pallof") || e.includes("anti-rot") || e.includes("anti rot");
+    }
+
+    function seriesVolume(it){
+      const w = toNum(it.peso);
+      const r = toNum(it.reps);
+      const time = (it.mode === "time") || !!it.seconds;
+
+      if(!Number.isFinite(w) || w <= 0 || !Number.isFinite(r) || r <= 0){
+        return { sets:1, vol:0 };
+      }
+      // reps: w*r ; core time: w*seconds (seconds guardado en reps)
+      return { sets:1, vol: w * r };
+    }
+
     function summarize(log){
       const sessions = new Set(log.map(x => x.date).filter(Boolean));
-      let tonnage7 = 0, tonnage28 = 0;
+      let vol7 = 0, vol28 = 0;
       let series7 = 0, series28 = 0;
 
       const byExercise28 = new Map();
@@ -1068,22 +1405,24 @@
         if(is28) series28++;
         if(is7) series7++;
 
+        const sv = seriesVolume(s);
+        if(is28) vol28 += sv.vol;
+        if(is7)  vol7 += sv.vol;
+
+        if(is28){
+          const ex = (s.ejercicio || "Sin nombre").trim();
+          const cur = byExercise28.get(ex) || { sets:0, vol:0 };
+          cur.sets += 1;
+          cur.vol += sv.vol;
+          byExercise28.set(ex, cur);
+        }
+
+        // PRs: SOLO reps (no core/time)
+        if(isCore(s)) continue;
+
         const w = toNum(s.peso);
         const r = toNum(s.reps);
-
         if(Number.isFinite(w) && Number.isFinite(r) && w > 0 && r > 0){
-          const t = w * r;
-          if(is28) tonnage28 += t;
-          if(is7)  tonnage7 += t;
-
-          if(is28){
-            const ex = (s.ejercicio || "Sin nombre").trim();
-            const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
-            cur.sets += 1;
-            cur.tonnage += t;
-            byExercise28.set(ex, cur);
-          }
-
           const exKey = (s.ejercicio || "Sin nombre").trim();
           const e1 = e1RM_Epley(w, r);
           if(Number.isFinite(e1)){
@@ -1092,17 +1431,12 @@
               prByExercise.set(exKey, { e1rm: e1, w, r, date: s.date || "", ts });
             }
           }
-        }else if(is28){
-          const ex = (s.ejercicio || "Sin nombre").trim();
-          const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
-          cur.sets += 1;
-          byExercise28.set(ex, cur);
         }
       }
 
       const top28 = [...byExercise28.entries()]
-        .map(([ex, v]) => ({ ex, sets: v.sets, tonnage: v.tonnage }))
-        .sort((a,b) => (b.tonnage - a.tonnage) || (b.sets - a.sets))
+        .map(([ex, v]) => ({ ex, sets: v.sets, vol: v.vol }))
+        .sort((a,b) => (b.vol - a.vol) || (b.sets - a.sets))
         .slice(0, 10);
 
       const prs = [...prByExercise.entries()]
@@ -1110,20 +1444,95 @@
         .sort((a,b) => b.e1rm - a.e1rm)
         .slice(0, 12);
 
-      return { sessionsCount: sessions.size, series7, series28, tonnage7, tonnage28, top28, prs };
+      return { sessionsCount: sessions.size, series7, series28, vol7, vol28, top28, prs };
     }
 
+    /* =========================
+       CHARTS (Canvas)
+    ========================= */
+    function fitCanvas(canvas){
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const rect = canvas.getBoundingClientRect();
+      const w = Math.floor(rect.width);
+      const h = Math.floor(rect.height);
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      return { ctx, w, h };
+    }
+
+    function clearChart(ctx, w, h){
+      ctx.clearRect(0,0,w,h);
+      ctx.fillStyle = "rgba(0,0,0,0)";
+      ctx.fillRect(0,0,w,h);
+    }
+
+    function drawBarChart(canvas, labels, values, options = {}){
+      if(!canvas) return;
+      const { ctx, w, h } = fitCanvas(canvas);
+      clearChart(ctx, w, h);
+
+      const padL = 10, padR = 10, padT = 12, padB = 22;
+      const innerW = w - padL - padR;
+      const innerH = h - padT - padB;
+
+      const maxV = Math.max(1, ...values.map(v => Number.isFinite(v) ? v : 0));
+      const n = labels.length || 1;
+      const gap = 6;
+      const barW = Math.max(8, Math.floor((innerW - gap*(n-1)) / n));
+
+      ctx.strokeStyle = "rgba(0,255,160,.12)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT + innerH);
+      ctx.lineTo(padL + innerW, padT + innerH);
+      ctx.stroke();
+
+      for(let i=0;i<n;i++){
+        const v = Number.isFinite(values[i]) ? values[i] : 0;
+        const x = padL + i*(barW + gap);
+        const bh = Math.round((v / maxV) * innerH);
+        const y = padT + (innerH - bh);
+
+        ctx.fillStyle = "rgba(0,255,156,.55)";
+        ctx.fillRect(x, y, barW, bh);
+
+        ctx.fillStyle = "rgba(215,255,233,.85)";
+        ctx.font = "10px Segoe UI, system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(String(labels[i]).slice(0,7), x + barW/2, padT + innerH + 14);
+      }
+
+      if(options.title){
+        ctx.fillStyle = "rgba(0,255,156,.9)";
+        ctx.font = "11px Segoe UI, system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText(options.title, 10, 12);
+      }
+    }
+
+    /* =========================
+       NIVEL (incluye CORE PRs)
+    ========================= */
     function renderNivel(){
       const box = document.getElementById("nivelBox");
       const kpiGrid = document.getElementById("kpiGrid");
       const prBox = document.getElementById("prBox");
       const topBox = document.getElementById("topBox");
-      if(!box || !kpiGrid || !prBox || !topBox) return;
+      const topChart = document.getElementById("topChart");
+
+      const corePrBox = document.getElementById("corePrBox");
+      const coreWeeklyChart = document.getElementById("coreWeeklyChart");
+
+      if(!box || !kpiGrid || !prBox || !topBox || !topChart || !corePrBox || !coreWeeklyChart) return;
 
       const log = readLog();
       const sesiones = new Set(log.map(x=>x.date)).size;
       const series = log.length;
       const lvl = Math.min(99, Math.floor(series / 25) + 1);
+
+      const s = summarize(log);
 
       box.textContent =
         `Nivel: ${lvl}\n` +
@@ -1132,17 +1541,15 @@
         `Fase: ${getActivePhase().name}\n` +
         `Objetivo: constancia + progresión sin dolor lumbar.`;
 
-      const s = summarize(log);
-
       kpiGrid.innerHTML = `
         <div class="kpi"><div class="k">Series (7 días)</div><div class="v">${s.series7}</div></div>
         <div class="kpi"><div class="k">Series (28 días)</div><div class="v">${s.series28}</div></div>
-        <div class="kpi"><div class="k">Tonelaje (7 días)</div><div class="v">${fmtKg(s.tonnage7)}<span class="muted"> kg</span></div></div>
-        <div class="kpi"><div class="k">Tonelaje (28 días)</div><div class="v">${fmtKg(s.tonnage28)}<span class="muted"> kg</span></div></div>
+        <div class="kpi"><div class="k">Volumen (7 días)</div><div class="v">${fmtKg(s.vol7)}<span class="muted"> u</span></div></div>
+        <div class="kpi"><div class="k">Volumen (28 días)</div><div class="v">${fmtKg(s.vol28)}<span class="muted"> u</span></div></div>
       `;
 
       if(s.prs.length === 0){
-        prBox.innerHTML = `<div class="log-meta">Aún no hay PRs. Registra series con peso y reps.</div>`;
+        prBox.innerHTML = `<div class="log-meta">Aún no hay PRs (solo reps con peso).</div>`;
       }else{
         prBox.innerHTML = `
           <table class="table">
@@ -1162,50 +1569,114 @@
 
       if(s.top28.length === 0){
         topBox.innerHTML = `<div class="log-meta">Sin datos en últimos 28 días.</div>`;
+        drawBarChart(topChart, ["—"], [0], { title:"Top 28d (volumen)" });
       }else{
+        const labels = s.top28.map(x=> x.ex.length>8 ? x.ex.slice(0,8)+"…" : x.ex);
+        const vals = s.top28.map(x=> x.vol || 0);
+        drawBarChart(topChart, labels, vals, { title:"Top 28d (volumen)" });
+
         topBox.innerHTML = `
           <table class="table">
-            <thead><tr><th>Ejercicio</th><th>Series</th><th>Tonelaje</th></tr></thead>
+            <thead><tr><th>Ejercicio</th><th>Series</th><th>Volumen</th></tr></thead>
             <tbody>
               ${s.top28.map(x => `
                 <tr>
                   <td>${x.ex}</td>
                   <td><span class="pill">${x.sets}</span></td>
-                  <td class="muted">${fmtKg(x.tonnage)} kg</td>
+                  <td class="muted">${fmtKg(x.vol)} u</td>
                 </tr>
               `).join("")}
             </tbody>
           </table>
         `;
       }
+
+      /* ===== CORE PRs + progreso semanal ===== */
+      const coreLog = log.filter(it => isCore(it));
+      if(coreLog.length === 0){
+        corePrBox.innerHTML = `<div class="log-meta">Aún no hay registros de CORE.</div>`;
+        drawBarChart(coreWeeklyChart, ["—"], [0], { title:"CORE semanal (seg)" });
+        return;
+      }
+
+      // PRs por ejercicio: mejor tiempo (seg) y mejor tiempo*lastre (seg*kg)
+      const coreMap = new Map(); // ex -> { bestSec, bestWeighted, bestWeightedSec, bestKg }
+      for(const it of coreLog){
+        const ex = (it.ejercicio || "CORE").trim();
+        const sec = toIntSafe(it.seconds || it.reps, 0);
+        const kg = toNum(it.peso);
+        const hasKg = Number.isFinite(kg) && kg > 0;
+        const weighted = hasKg ? (sec * kg) : 0;
+
+        const cur = coreMap.get(ex) || {
+          bestSec: 0,
+          bestWeighted: 0,
+          bestWeightedSec: 0,
+          bestKg: 0
+        };
+
+        if(sec > cur.bestSec) cur.bestSec = sec;
+
+        if(hasKg && weighted > cur.bestWeighted){
+          cur.bestWeighted = weighted;
+          cur.bestWeightedSec = sec;
+          cur.bestKg = kg;
+        }
+
+        coreMap.set(ex, cur);
+      }
+
+      const coreRows = [...coreMap.entries()]
+        .map(([ex,v]) => ({ ex, ...v }))
+        .sort((a,b)=> (b.bestSec - a.bestSec))
+        .slice(0, 10);
+
+      corePrBox.innerHTML = `
+        <table class="table">
+          <thead><tr><th>Ejercicio</th><th>Mejor tiempo</th><th>Mejor con lastre</th></tr></thead>
+          <tbody>
+            ${coreRows.map(r => `
+              <tr>
+                <td>${r.ex}</td>
+                <td><span class="pill">${fmtTime(r.bestSec)}</span></td>
+                <td class="muted">${
+                  r.bestWeighted > 0
+                    ? `${fmtTime(r.bestWeightedSec)} · ${r.bestKg}kg`
+                    : "—"
+                }</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+
+      // Progreso semanal (8 semanas): sumatorio de segundos CORE por semana
+      const wmap = new Map(); // wk -> secondsTotal
+      for(const it of coreLog){
+        if(!it.date) continue;
+        const wk = weekKeyFromISODate(it.date);
+        const sec = toIntSafe(it.seconds || it.reps, 0);
+        wmap.set(wk, (wmap.get(wk) || 0) + Math.max(0, sec));
+      }
+      const wkeys = [...wmap.keys()].sort().slice(-8);
+      const labelsW = wkeys.map(k => k.slice(5));
+      const valsW = wkeys.map(k => wmap.get(k));
+      drawBarChart(coreWeeklyChart, labelsW.length ? labelsW : ["—"], valsW.length ? valsW : [0], { title:"CORE semanal (seg)" });
     }
 
-    function norm(s){ return String(s||"").toLowerCase().trim(); }
-    function classifyPriority(ex){
-      const e = norm(ex);
-      if(e.includes("gemelo") || e.includes("calf")) return "gemelos";
-      if(e.includes("antebra") || e.includes("muñeca") || e.includes("muneca") || e.includes("forearm") || e.includes("reverse curl")) return "antebrazos";
-      if(e.includes("cuello") || e.includes("neck")) return "cuello";
-      return null;
-    }
-    function weekKeyFromISODate(isoDate){
-      const d = new Date(isoDate + "T00:00:00");
-      const monday = startOfWeekISO(d);
-      const y = monday.getFullYear();
-      const jan4 = new Date(y,0,4);
-      const jan4Mon = startOfWeekISO(jan4);
-      const diff = (monday - jan4Mon) / (7*24*60*60*1000);
-      const wk = Math.floor(diff) + 1;
-      return `${y}-W${String(wk).padStart(2,"0")}`;
-    }
-
+    /* =========================
+       STATS PRO
+    ========================= */
     function renderStats(){
       const log = readLog();
       const meta = document.getElementById("statsMeta");
       const kpis = document.getElementById("statsKpis");
       const prioBox = document.getElementById("prioBox");
       const weeklyBox = document.getElementById("weeklyBox");
-      if(!meta || !kpis || !prioBox || !weeklyBox) return;
+      const prioChart = document.getElementById("prioChart");
+      const weeklyTonChart = document.getElementById("weeklyTonChart");
+      const weeklySetsChart = document.getElementById("weeklySetsChart");
+      if(!meta || !kpis || !prioBox || !weeklyBox || !prioChart || !weeklyTonChart || !weeklySetsChart) return;
 
       meta.textContent = `Fase: ${getActivePhase().name} · Registros: ${log.length}`;
 
@@ -1220,7 +1691,9 @@
         daysSince = Math.round((b-a)/(24*60*60*1000));
       }
 
+      const series7 = log.filter(x=> withinLastDays(x.ts||0,7)).length;
       const series28 = log.filter(x=> withinLastDays(x.ts||0,28)).length;
+
       const ses7 = new Set(log.filter(x=> withinLastDays(x.ts||0,7)).map(x=>x.date)).size;
       const ses28 = new Set(log.filter(x=> withinLastDays(x.ts||0,28)).map(x=>x.date)).size;
 
@@ -1231,49 +1704,65 @@
         <div class="kpi"><div class="k">Series (28 días)</div><div class="v">${series28}</div></div>
       `;
 
-      const pr = { gemelos:{ sets:0, ton:0 }, antebrazos:{ sets:0, ton:0 }, cuello:{ sets:0, ton:0 } };
+      const pr = {
+        gemelos:{ sets:0, vol:0 },
+        antebrazos:{ sets:0, vol:0 },
+        cuello:{ sets:0, vol:0 }
+      };
+
       log.forEach(s=>{
         if(!withinLastDays(s.ts||0,28)) return;
         const k = classifyPriority(s.ejercicio);
         if(!k) return;
         pr[k].sets += 1;
-        const w = toNum(s.peso), r = toNum(s.reps);
-        if(Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) pr[k].ton += (w*r);
+        pr[k].vol += seriesVolume(s).vol;
       });
+
+      const prLabels = ["Gemelos","Antebrazos","Cuello"];
+      const prVals = [pr.gemelos.sets, pr.antebrazos.sets, pr.cuello.sets];
+      drawBarChart(prioChart, prLabels, prVals, { title:"Prioridades 28d (series)" });
 
       prioBox.innerHTML = `
         <table class="table">
-          <thead><tr><th>Grupo</th><th>Series</th><th>Tonelaje</th></tr></thead>
+          <thead><tr><th>Grupo</th><th>Series</th><th>Volumen</th></tr></thead>
           <tbody>
-            <tr><td>Gemelos</td><td><span class="pill">${pr.gemelos.sets}</span></td><td class="muted">${fmtKg(pr.gemelos.ton)} kg</td></tr>
-            <tr><td>Antebrazos</td><td><span class="pill">${pr.antebrazos.sets}</span></td><td class="muted">${fmtKg(pr.antebrazos.ton)} kg</td></tr>
-            <tr><td>Cuello</td><td><span class="pill">${pr.cuello.sets}</span></td><td class="muted">${fmtKg(pr.cuello.ton)} kg</td></tr>
+            <tr><td>Gemelos</td><td><span class="pill">${pr.gemelos.sets}</span></td><td class="muted">${fmtKg(pr.gemelos.vol)} u</td></tr>
+            <tr><td>Antebrazos</td><td><span class="pill">${pr.antebrazos.sets}</span></td><td class="muted">${fmtKg(pr.antebrazos.vol)} u</td></tr>
+            <tr><td>Cuello</td><td><span class="pill">${pr.cuello.sets}</span></td><td class="muted">${fmtKg(pr.cuello.vol)} u</td></tr>
           </tbody>
         </table>
       `;
 
-      const map = new Map();
+      const map = new Map(); // weekKey -> {sets, vol}
       log.forEach(s=>{
         if(!s.date) return;
         const wk = weekKeyFromISODate(s.date);
-        const cur = map.get(wk) || { sets:0, ton:0 };
+        const cur = map.get(wk) || { sets:0, vol:0 };
         cur.sets += 1;
-        const w = toNum(s.peso), r = toNum(s.reps);
-        if(Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) cur.ton += w*r;
+        cur.vol += seriesVolume(s).vol;
         map.set(wk, cur);
       });
 
       const keys = [...map.keys()].sort().slice(-8);
       if(keys.length === 0){
         weeklyBox.innerHTML = `<div class="log-meta">Sin datos suficientes aún.</div>`;
+        drawBarChart(weeklyTonChart, ["—"], [0], { title:"Volumen semanal" });
+        drawBarChart(weeklySetsChart, ["—"], [0], { title:"Series semanales" });
       }else{
+        const vols = keys.map(k => map.get(k).vol);
+        const sets = keys.map(k => map.get(k).sets);
+        const short = keys.map(k => k.slice(5));
+
+        drawBarChart(weeklyTonChart, short, vols, { title:"Volumen semanal (8)" });
+        drawBarChart(weeklySetsChart, short, sets, { title:"Series semanales (8)" });
+
         weeklyBox.innerHTML = `
           <table class="table">
-            <thead><tr><th>Semana</th><th>Series</th><th>Tonelaje</th></tr></thead>
+            <thead><tr><th>Semana</th><th>Series</th><th>Volumen</th></tr></thead>
             <tbody>
               ${keys.map(k=>{
                 const v = map.get(k);
-                return `<tr><td>${k}</td><td><span class="pill">${v.sets}</span></td><td class="muted">${fmtKg(v.ton)} kg</td></tr>`;
+                return `<tr><td>${k}</td><td><span class="pill">${v.sets}</span></td><td class="muted">${fmtKg(v.vol)} u</td></tr>`;
               }).join("")}
             </tbody>
           </table>
@@ -1360,14 +1849,9 @@
       const log = readLog();
       const w = workoutToday();
 
-      if(log.length === 0){
-        banner.style.display = "block";
-        text.textContent = `Aún no hay registros en la fase "${getActivePhase().name}". Hoy toca: ${w.key} (${w.name}).`;
-        return;
-      }
-
       const dates = [...new Set(log.map(x=>x.date).filter(Boolean))].sort();
-      const last = dates[dates.length-1];
+      const last = dates[dates.length-1] || null;
+
       let daysSince = 0;
       if(last){
         const a = new Date(last + "T00:00:00");
@@ -1377,7 +1861,7 @@
 
       const msg =
         `Fase: "${getActivePhase().name}". ` +
-        `Último entreno: ${last} (hace ${daysSince} día(s)). ` +
+        (last ? `Último entreno: ${last} (hace ${daysSince} día(s)). ` : `Sin registros aún. `) +
         `Hoy toca: ${w.key} · ${w.name}.`;
 
       banner.style.display = "block";
@@ -1405,7 +1889,7 @@
     ========================= */
     function exportarBackup(){
       const payload = {
-        schema: "bilbo-pro-backup-v1",
+        schema: "entreno-backup-v1",
         exportedAt: new Date().toISOString(),
         appVersion: APP_VERSION,
         cacheVersion: CACHE_VERSION,
@@ -1423,7 +1907,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `bilbo_backup_${todayISO()}.json`;
+      a.download = `entreno_backup_${todayISO()}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1445,7 +1929,7 @@
         showToast("⚠️ JSON inválido");
         return;
       }
-      if(!obj || obj.schema !== "bilbo-pro-backup-v1" || !obj.data){
+      if(!obj || obj.schema !== "entreno-backup-v1" || !obj.data){
         showToast("⚠️ Backup no reconocido");
         return;
       }
@@ -1474,20 +1958,20 @@
     }
 
     /* =========================
-       PWA: estado/actualizar
+       PWA
     ========================= */
     async function refreshPwaStatus(){
       const el = document.getElementById("pwaStatus");
       if(!el) return;
 
       if(!("serviceWorker" in navigator)){
-        el.textContent = "Estado: Service Worker NO disponible en este navegador.";
+        el.textContent = "Estado: Service Worker NO disponible.";
         return;
       }
 
       const reg = await navigator.serviceWorker.getRegistration();
       if(!reg){
-        el.textContent = "Estado: Service Worker NO registrado aún.";
+        el.textContent = "Estado: SW NO registrado.";
         return;
       }
 
@@ -1501,20 +1985,12 @@
     }
 
     async function actualizarApp(){
-      if(!("serviceWorker" in navigator)){
-        showToast("⚠️ No hay Service Worker");
-        return;
-      }
-
+      if(!("serviceWorker" in navigator)){ showToast("⚠️ No hay Service Worker"); return; }
       const reg = await navigator.serviceWorker.getRegistration();
-      if(!reg){
-        showToast("⚠️ SW no registrado");
-        return;
-      }
+      if(!reg){ showToast("⚠️ SW no registrado."); return; }
 
       try{
         await reg.update();
-
         if(reg.waiting){
           reg.waiting.postMessage({ type: "SKIP_WAITING" });
           showToast("🔄 Actualizando…");
@@ -1533,11 +2009,10 @@
       }
     }
 
-    /* ===== Registrar SW (IMPORTANTE: ruta relativa) ===== */
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", async () => {
         try{
-          await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+          await navigator.serviceWorker.register("./sw.js");
           refreshPwaStatus();
         }catch(e){
           console.log("SW error:", e);
@@ -1553,6 +2028,8 @@
       writePhases(phases);
       setActivePhase(getActivePhaseId());
 
+      migrateLogIfNeeded();
+      renderCoreTemplates();   // NUEVO
       bindModal();
 
       const inp = document.getElementById("importFile");
@@ -1563,6 +2040,11 @@
         });
       }
 
+      const s = document.getElementById("logSearch");
+      if(s){
+        s.addEventListener("input", ()=> renderLog());
+      }
+
       renderPhasesUI();
       renderWorkoutToday();
       renderLog();
@@ -1571,6 +2053,11 @@
       renderCalendar();
       refreshPwaStatus();
       renderReminder();
+
+      window.addEventListener("resize", ()=>{
+        if(screens.nivel.classList.contains("active")) renderNivel();
+        if(screens.stats.classList.contains("active")) renderStats();
+      });
     });
   </script>
 </body>
