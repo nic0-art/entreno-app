@@ -1,5 +1,5 @@
 /* Entreno App Service Worker (cache-first) */
-const CACHE_NAME = "entreno-cache-v1";
+const CACHE_NAME = "entreno-cache-v2";
 
 const ASSETS = [
   "./",
