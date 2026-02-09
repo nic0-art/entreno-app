@@ -1,10 +1,9 @@
 /* =========================
    Entreno App — Bilbo Pro PWA
-   Todo privado en localStorage
 ========================= */
 
-const APP_VERSION = "EntrenoApp-PWA 2.1 ALL-IN";
-const CACHE_VERSION = "entreno-cache-v2";
+const APP_VERSION = "EntrenoApp-PWA 2.2 SESSIONS+TRAFFIC";
+const CACHE_VERSION = "entreno-cache-v3";
 
 /* =========================
    Keys
@@ -17,9 +16,12 @@ const LS_MISSION = "entreno_mission_v1";
 const LS_MIGRATED = "entreno_migrated_to_v4";
 const LS_FAVS = "entreno_favs_v1";
 const LS_REST = "entreno_rest_settings_v1";
+const LS_TARGETS = "entreno_targets_v1";
 
-/* NUEVO: filtro log */
+/* LOG */
 let LOG_QUERY = "";
+let LOG_VIEW = "sessions"; // "list" | "sessions"
+let SESSION_EXPANDED = {}; // date -> boolean
 
 /* =========================
    Helpers
@@ -59,6 +61,15 @@ function fmtShort(isoDate){
   return `${d}/${m}`;
 }
 function norm(s){ return String(s||"").toLowerCase().trim(); }
+function withinLastDays(ts, days){
+  const ms = days * 24 * 60 * 60 * 1000;
+  return (Date.now() - ts) <= ms;
+}
+function fmtKg(n){
+  if(!Number.isFinite(n)) return "-";
+  const v = Math.round(n * 10) / 10;
+  return `${v}`;
+}
 
 /* =========================
    NAV / Screens
@@ -96,7 +107,13 @@ function bindNav(){
       if(key==="cal") renderCalendar();
       if(key==="graf") renderCharts();
       if(key==="entreno") renderWorkoutToday();
-      if(key==="ajustes"){ refreshPwaStatus(); renderPhasesUI(); renderFavsUI(); loadRestSettingsUI(); }
+      if(key==="ajustes"){
+        refreshPwaStatus();
+        renderPhasesUI();
+        renderFavsUI();
+        loadRestSettingsUI();
+        loadTargetsUI();
+      }
     });
   });
 }
@@ -217,7 +234,7 @@ function renderWorkoutToday(){
   renderFavChips();
 }
 
-/* NUEVO: plantillas + principal */
+/* principal + plantillas */
 window.ponerPrincipalDelDia = function(){
   const qe = document.getElementById("quickExercise");
   const w = workoutToday();
@@ -378,7 +395,7 @@ window.clearFavorites = function(){
 };
 
 /* =========================
-   LOG
+   LOG (global) + migración
 ========================= */
 function safeParse(key, fallback){
   try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
@@ -433,7 +450,7 @@ function migrateIfNeeded(){
 }
 
 /* =========================
-   Modal + validaciones + ALERTA LUMBAR
+   Modal + alertas
 ========================= */
 let EDITING_ID = null;
 
@@ -477,8 +494,6 @@ function getLastSetSameExercise(exName, tipo){
   }
   return null;
 }
-
-/* NUEVO: alerta lumbar */
 function isLumbarRiskExercise(name){
   const e = norm(name);
   const hits = [
@@ -599,7 +614,6 @@ function saveFromModal(){
     if(!Number.isFinite(sec) || sec <= 0){ showToast("⚠️ Indica tiempo (mm:ss o seg)"); return; }
   }
 
-  // ALERTA lumbar antes de guardar
   if(isLumbarRiskExercise(ejercicio)){
     const ok = confirm(
       "⚠️ Aviso lumbar: este ejercicio suele cargar la zona lumbar.\n\n" +
@@ -611,10 +625,8 @@ function saveFromModal(){
 
   const w = workoutToday();
   const pid = getActivePhaseId();
-
   const all = readLogAll();
 
-  // Editar
   if(EDITING_ID){
     const idx = all.findIndex(x => x.id === EDITING_ID);
     if(idx >= 0){
@@ -634,12 +646,9 @@ function saveFromModal(){
     }
   }
 
-  // Auto-serie inteligente
   let serieFinal = serieInput;
   const lastSame = getLastSetSameExercise(ejercicio, tipo);
-  if(lastSame){
-    serieFinal = String(nextSerie(lastSame.serie));
-  }
+  if(lastSame) serieFinal = String(nextSerie(lastSame.serie));
 
   const item = {
     id: uid(),
@@ -663,7 +672,6 @@ function saveFromModal(){
   cerrarModalSerie();
   renderAllAfterChange();
   showToast(`✅ Guardado (S${serieFinal})`);
-
   restAutoKick();
 }
 
@@ -675,6 +683,7 @@ function renderAllAfterChange(){
   renderCharts();
 }
 
+/* bind modal */
 function bindModal(){
   const close = document.getElementById("modalClose");
   const cancel = document.getElementById("modalCancel");
@@ -691,7 +700,6 @@ function bindModal(){
   document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && backdrop.classList.contains("show")) cerrarModalSerie(); });
 
   save.onclick = saveFromModal;
-
   mTipo.addEventListener("change", ()=> setTipoUI(mTipo.value));
 
   mTime.addEventListener("blur", ()=>{
@@ -705,7 +713,7 @@ function bindModal(){
 }
 
 /* =========================
-   LOG UI + BUSCADOR
+   LOG UI (Lista vs Sesiones)
 ========================= */
 window.aplicarBusquedaLog = function(){
   const inp = document.getElementById("logSearch");
@@ -719,6 +727,20 @@ window.limpiarBusquedaLog = function(){
   if(inp) inp.value = "";
   renderLog();
   showToast("✅ Filtro borrado");
+};
+
+window.toggleLogView = function(){
+  LOG_VIEW = (LOG_VIEW === "sessions") ? "list" : "sessions";
+  showToast(`📌 Vista: ${LOG_VIEW === "sessions" ? "Sesiones" : "Lista"}`);
+  renderLog();
+};
+window.expandCollapseSesiones = function(){
+  const current = readLogFiltered();
+  const byDate = groupByDate(current);
+  const anyCollapsed = Object.keys(byDate).some(d => !SESSION_EXPANDED[d]);
+  // si hay alguna colapsada -> expandir todo, si todas expandidas -> colapsar todo
+  Object.keys(byDate).forEach(d => SESSION_EXPANDED[d] = anyCollapsed ? true : false);
+  renderLog();
 };
 
 window.borrarHistorial = function(){
@@ -737,14 +759,8 @@ function borrarSerie(id){
   showToast("🗑️ Serie borrada");
 }
 
-function renderLog(){
-  const list = document.getElementById("logList");
-  const hint = document.getElementById("logEmptyHint");
-  if(!list) return;
-
+function readLogFiltered(){
   let log = readLog();
-
-  // filtro
   const q = norm(LOG_QUERY);
   if(q){
     log = log.filter(it=>{
@@ -755,6 +771,42 @@ function renderLog(){
       return hay.includes(q);
     });
   }
+  return log;
+}
+
+function groupByDate(log){
+  const map = {};
+  for(const it of log){
+    const d = it.date || "Sin fecha";
+    if(!map[d]) map[d] = [];
+    map[d].push(it);
+  }
+  // ordenar cada día por ts desc
+  Object.keys(map).forEach(d => map[d].sort((a,b)=> (b.ts||0)-(a.ts||0)));
+  return map;
+}
+
+function sumSession(items){
+  let sets = items.length;
+  let ton = 0;
+  let time = 0;
+  let coreSets = 0;
+  for(const s of items){
+    if((s.tipo||"reps")==="reps"){
+      const w = toNum(s.peso), r = toNum(s.reps);
+      if(Number.isFinite(w) && Number.isFinite(r) && w>0 && r>0) ton += w*r;
+    }else{
+      const sec = toNum(s.timeSec);
+      if(Number.isFinite(sec) && sec>0){ time += sec; coreSets += 1; }
+    }
+  }
+  return { sets, ton, time, coreSets };
+}
+
+function renderLogList(log){
+  const list = document.getElementById("logList");
+  const hint = document.getElementById("logEmptyHint");
+  if(!list) return;
 
   list.innerHTML = "";
   if(hint) hint.style.display = log.length ? "none" : "block";
@@ -797,6 +849,101 @@ function renderLog(){
 
     list.appendChild(div);
   });
+}
+
+function renderLogSessions(log){
+  const list = document.getElementById("logList");
+  const hint = document.getElementById("logEmptyHint");
+  if(!list) return;
+
+  const byDate = groupByDate(log);
+  const dates = Object.keys(byDate).sort().reverse(); // yyyy-mm-dd desc
+
+  list.innerHTML = "";
+  if(hint) hint.style.display = dates.length ? "none" : "block";
+
+  dates.slice(0,60).forEach(d=>{
+    const items = byDate[d];
+    const sum = sumSession(items);
+
+    if(SESSION_EXPANDED[d] === undefined) SESSION_EXPANDED[d] = true;
+
+    const header = document.createElement("div");
+    header.className = "log-card";
+    header.style.cursor = "pointer";
+
+    const tone = fmtKg(sum.ton);
+    const ttime = sum.time ? formatMMSS(sum.time) : "—";
+
+    header.textContent =
+      `📅 ${d}\n` +
+      `Series: ${sum.sets} · Tonelaje: ${tone} kg · Core tiempo: ${ttime}`;
+
+    header.addEventListener("click", ()=>{
+      SESSION_EXPANDED[d] = !SESSION_EXPANDED[d];
+      renderLog();
+    });
+
+    const mini = document.createElement("div");
+    mini.className = "mini-actions";
+
+    const addBtn = document.createElement("button");
+    addBtn.className = "mini ok";
+    addBtn.textContent = "Añadir serie";
+    addBtn.onclick = (e)=>{ e.stopPropagation(); registrarSerie(); };
+
+    const csvBtn = document.createElement("button");
+    csvBtn.className = "mini";
+    csvBtn.textContent = "Ver (lista)";
+    csvBtn.onclick = (e)=>{ e.stopPropagation(); LOG_VIEW="list"; renderLog(); showToast("📌 Vista: Lista"); };
+
+    mini.appendChild(addBtn);
+    mini.appendChild(csvBtn);
+    header.appendChild(mini);
+
+    list.appendChild(header);
+
+    if(!SESSION_EXPANDED[d]) return;
+
+    // mostrar detalle del día (máx 30)
+    items.slice(0,30).forEach(it=>{
+      const div = document.createElement("div");
+      div.className = "log-card";
+
+      let line = "";
+      if((it.tipo||"reps")==="time"){
+        line = `${it.ejercicio}\n• S${it.serie} · ${formatMMSS(toNum(it.timeSec))} · ${it.peso? it.peso+" kg · ":""}${it.rpe? "RPE "+it.rpe:""}`;
+      }else{
+        line = `${it.ejercicio}\n• S${it.serie} · ${it.peso||"-"} kg · ${it.reps||"-"} reps${it.rpe? " · RPE "+it.rpe:""}`;
+      }
+      div.textContent = line;
+
+      const actions = document.createElement("div");
+      actions.className = "mini-actions";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "mini ok";
+      editBtn.textContent = "Editar";
+      editBtn.onclick = ()=> abrirModalSerie("", it);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "mini danger";
+      delBtn.textContent = "Borrar";
+      delBtn.onclick = ()=>{ if(confirm("¿Borrar esta serie?")) borrarSerie(it.id); };
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+      div.appendChild(actions);
+
+      list.appendChild(div);
+    });
+  });
+}
+
+function renderLog(){
+  const log = readLogFiltered();
+  if(LOG_VIEW === "list") renderLogList(log);
+  else renderLogSessions(log);
 }
 
 /* =========================
@@ -843,7 +990,7 @@ window.exportarCSV = function(){
 };
 
 /* =========================
-   Nivel / Stats + e1RM
+   Nivel / Stats
 ========================= */
 function e1RM_Epley(weight, reps){
   const w = toNum(weight);
@@ -851,15 +998,6 @@ function e1RM_Epley(weight, reps){
   if(!Number.isFinite(w) || !Number.isFinite(r) || w <= 0 || r <= 0) return NaN;
   const rr = clamp(r, 1, 30);
   return w * (1 + (rr / 30));
-}
-function withinLastDays(ts, days){
-  const ms = days * 24 * 60 * 60 * 1000;
-  return (Date.now() - ts) <= ms;
-}
-function fmtKg(n){
-  if(!Number.isFinite(n)) return "-";
-  const v = Math.round(n * 10) / 10;
-  return `${v}`;
 }
 function summarize(log){
   const sessions = new Set(log.map(x => x.date).filter(Boolean));
@@ -877,10 +1015,20 @@ function summarize(log){
     if(is28) series28++;
     if(is7) series7++;
 
+    if((s.tipo||"reps")!=="reps") {
+      if(is28){
+        const ex = (s.ejercicio || "Sin nombre").trim();
+        const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
+        cur.sets += 1;
+        byExercise28.set(ex, cur);
+      }
+      continue;
+    }
+
     const w = toNum(s.peso);
     const r = toNum(s.reps);
 
-    if((s.tipo||"reps")==="reps" && Number.isFinite(w) && Number.isFinite(r) && w > 0 && r > 0){
+    if(Number.isFinite(w) && Number.isFinite(r) && w > 0 && r > 0){
       const t = w * r;
       if(is28) tonnage28 += t;
       if(is7)  tonnage7 += t;
@@ -990,8 +1138,38 @@ function renderNivel(){
 }
 
 /* =========================
-   Stats PRO
+   Objetivos + Semáforo semanal
 ========================= */
+function defaultTargets(){
+  return { gemelos: 10, antebrazos: 10, cuello: 8 };
+}
+function readTargets(){
+  try{
+    const t = JSON.parse(localStorage.getItem(LS_TARGETS) || "null");
+    if(t && Number.isFinite(t.gemelos) && Number.isFinite(t.antebrazos) && Number.isFinite(t.cuello)) return t;
+  }catch(e){}
+  return defaultTargets();
+}
+function writeTargets(t){
+  localStorage.setItem(LS_TARGETS, JSON.stringify(t));
+}
+function loadTargetsUI(){
+  const t = readTargets();
+  const a = document.getElementById("tAntebrazos");
+  const g = document.getElementById("tGemelos");
+  const c = document.getElementById("tCuello");
+  if(g) g.value = String(t.gemelos);
+  if(a) a.value = String(t.antebrazos);
+  if(c) c.value = String(t.cuello);
+}
+window.saveTargets = function(){
+  const g = Math.max(0, Math.min(50, parseInt(document.getElementById("tGemelos")?.value || "0",10)));
+  const a = Math.max(0, Math.min(50, parseInt(document.getElementById("tAntebrazos")?.value || "0",10)));
+  const c = Math.max(0, Math.min(50, parseInt(document.getElementById("tCuello")?.value || "0",10)));
+  writeTargets({ gemelos:g, antebrazos:a, cuello:c });
+  showToast("✅ Objetivos guardados");
+  renderStats();
+};
 function classifyPriority(ex){
   const e = norm(ex);
   if(e.includes("gemelo") || e.includes("calf")) return "gemelos";
@@ -999,6 +1177,61 @@ function classifyPriority(ex){
   if(e.includes("cuello") || e.includes("neck")) return "cuello";
   return null;
 }
+function getWeekRange(){
+  const mon = startOfWeekISO(new Date());
+  const sun = addDays(mon, 6);
+  return { mon, sun };
+}
+function weekContains(ts){
+  const { mon, sun } = getWeekRange();
+  const a = mon.getTime();
+  const b = (new Date(sun)).setHours(23,59,59,999);
+  return ts >= a && ts <= b;
+}
+function buildTraffic(){
+  const t = readTargets();
+  const log = readLog();
+
+  const counts = { gemelos:0, antebrazos:0, cuello:0 };
+
+  for(const s of log){
+    const ts = Number(s.ts) || 0;
+    if(!ts || !weekContains(ts)) continue;
+    const k = classifyPriority(s.ejercicio);
+    if(!k) continue;
+    counts[k] += 1;
+  }
+
+  const traffic = [
+    { key:"gemelos", label:"Gemelos", done: counts.gemelos, target: t.gemelos },
+    { key:"antebrazos", label:"Antebrazos", done: counts.antebrazos, target: t.antebrazos },
+    { key:"cuello", label:"Cuello", done: counts.cuello, target: t.cuello }
+  ];
+
+  traffic.forEach(x=>{
+    const target = Math.max(0, x.target);
+    const done = x.done;
+    const ratio = target === 0 ? 1 : done / target;
+
+    if(target === 0){
+      x.status = "g";
+      x.msg = `Objetivo 0 → sin seguimiento.`;
+    }else if(ratio >= 1){
+      x.status = "g";
+      x.msg = `✅ Cumplido: ${done}/${target} series.`;
+    }else if(ratio >= 0.5){
+      x.status = "y";
+      x.msg = `⚠️ En marcha: ${done}/${target} series.`;
+    }else{
+      x.status = "r";
+      x.msg = `⛔ Bajo: ${done}/${target} series.`;
+    }
+  });
+
+  return traffic;
+}
+
+/* Stats PRO */
 function weekKeyFromISODate(isoDate){
   const d = new Date(isoDate + "T00:00:00");
   const monday = startOfWeekISO(d);
@@ -1009,6 +1242,22 @@ function weekKeyFromISODate(isoDate){
   const wk = Math.floor(diff) + 1;
   return `${y}-W${String(wk).padStart(2,"0")}`;
 }
+function renderTrafficBox(){
+  const box = document.getElementById("trafficBox");
+  if(!box) return;
+  const { mon, sun } = getWeekRange();
+  const traffic = buildTraffic();
+  box.innerHTML = traffic.map(x=>`
+    <div class="traffic-item">
+      <div class="h">
+        <div style="font-weight:900; color:#00ff9c;">${x.label}</div>
+        <div><span class="dot ${x.status}"></span> <span class="pill">${x.done}/${x.target}</span></div>
+      </div>
+      <div class="m">${x.msg}<br><span class="muted">Semana: ${iso(mon)} → ${iso(sun)}</span></div>
+    </div>
+  `).join("");
+}
+
 function renderStats(){
   const log = readLog();
   const meta = document.getElementById("statsMeta");
@@ -1018,6 +1267,7 @@ function renderStats(){
   if(!meta || !kpis || !prioBox || !weeklyBox) return;
 
   meta.textContent = `Fase: ${getActivePhase().name} · Registros: ${log.length}`;
+  renderTrafficBox();
 
   const dates = log.map(x=>x.date).filter(Boolean);
   const uniqueDates = [...new Set(dates)];
@@ -1032,6 +1282,7 @@ function renderStats(){
 
   const series7 = log.filter(x=> withinLastDays(x.ts||0,7)).length;
   const series28 = log.filter(x=> withinLastDays(x.ts||0,28)).length;
+
   const ses7 = new Set(log.filter(x=> withinLastDays(x.ts||0,7)).map(x=>x.date)).size;
   const ses28 = new Set(log.filter(x=> withinLastDays(x.ts||0,28)).map(x=>x.date)).size;
 
@@ -1210,7 +1461,7 @@ window.resetearMision = function(){
 ========================= */
 window.exportarBackup = function(){
   const payload = {
-    schema: "entreno-backup-v1",
+    schema: "entreno-backup-v2",
     exportedAt: new Date().toISOString(),
     appVersion: APP_VERSION,
     cacheVersion: CACHE_VERSION,
@@ -1221,7 +1472,8 @@ window.exportarBackup = function(){
       dayOverride: localStorage.getItem(LS_DAY_OVERRIDE) || null,
       mission: localStorage.getItem(LS_MISSION) || null,
       favs: localStorage.getItem(LS_FAVS) || null,
-      rest: localStorage.getItem(LS_REST) || null
+      rest: localStorage.getItem(LS_REST) || null,
+      targets: localStorage.getItem(LS_TARGETS) || null
     }
   };
 
@@ -1247,7 +1499,7 @@ async function importBackupFile(file){
   const txt = await file.text();
   let obj = null;
   try{ obj = JSON.parse(txt); }catch(e){ showToast("⚠️ JSON inválido"); return; }
-  if(!obj || obj.schema !== "entreno-backup-v1" || !obj.data){ showToast("⚠️ Backup no reconocido"); return; }
+  if(!obj || !obj.data){ showToast("⚠️ Backup no reconocido"); return; }
   if(!confirm("¿Importar backup y SOBRESCRIBIR tus datos actuales?")) return;
 
   const d = obj.data;
@@ -1267,11 +1519,15 @@ async function importBackupFile(file){
   if(typeof d.rest === "string") localStorage.setItem(LS_REST, d.rest);
   else localStorage.removeItem(LS_REST);
 
+  if(typeof d.targets === "string") localStorage.setItem(LS_TARGETS, d.targets);
+  else localStorage.removeItem(LS_TARGETS);
+
   showToast("✅ Backup importado");
   renderPhasesUI();
   renderFavChips();
   renderFavsUI();
   loadRestSettingsUI();
+  loadTargetsUI();
   renderWorkoutToday();
   renderAllAfterChange();
   refreshPwaStatus();
@@ -1625,6 +1881,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   bindModal();
 
+  // defaults UI
+  const logSearch = document.getElementById("logSearch");
+  if(logSearch) logSearch.value = LOG_QUERY || "";
+
   renderPhasesUI();
   renderWorkoutToday();
   renderLog();
@@ -1638,8 +1898,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
   renderFavChips();
   renderFavsUI();
   loadRestSettingsUI();
-
-  // si hay buscador visible, sincroniza input
-  const logSearch = document.getElementById("logSearch");
-  if(logSearch) logSearch.value = LOG_QUERY || "";
+  loadTargetsUI();
 });
