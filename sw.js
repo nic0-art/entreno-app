@@ -1,82 +1,98 @@
-/* sw.js */
-const CACHE_NAME = "entreno-app-v4";
-const CORE_ASSETS = [
-  "/",              // importante para GitHub Pages/Workers: sirve index
-  "/index.html",
-  "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png"
-];
+/* sw.js - Entreno App (offline-first) */
+const CACHE_VERSION = "entreno-cache-v5";
+const STATIC_CACHE = CACHE_VERSION;
+const RUNTIME_CACHE = "runtime-" + CACHE_VERSION;
 
-// Instalar: cachea lo esencial
+const STATIC_ASSETS = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./icon-192.png",
+  "./icon-512.png"
+].filter(Boolean);
+
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(STATIC_CACHE);
+    await cache.addAll(STATIC_ASSETS);
+    self.skipWaiting();
+  })());
 });
 
-// Activar: limpia caches viejas
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
-      await self.clients.claim();
-    })()
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.map((k) => {
+        if (k !== STATIC_CACHE && k !== RUNTIME_CACHE) return caches.delete(k);
+      })
+    );
+    await self.clients.claim();
+  })());
 });
 
-// Permite “actualizarApp()” desde la UI
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
 
-// Fetch: offline-first para navegación y assets
+function isSameOrigin(req) {
+  try { return new URL(req.url).origin === self.location.origin; }
+  catch(e){ return false; }
+}
+
+async function cacheFirst(req) {
+  const cached = await caches.match(req);
+  if (cached) return cached;
+
+  const res = await fetch(req);
+  const cache = await caches.open(RUNTIME_CACHE);
+  cache.put(req, res.clone());
+  return res;
+}
+
+async function networkFirst(req) {
+  const cache = await caches.open(RUNTIME_CACHE);
+  try {
+    const res = await fetch(req);
+    cache.put(req, res.clone());
+    return res;
+  } catch (e) {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+    throw e;
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  const url = new URL(req.url);
 
-  // Solo mismo origen
-  if (url.origin !== self.location.origin) return;
+  // Solo GET
+  if (req.method !== "GET") return;
 
-  // Navegación (abrir la app): intenta cache primero (offline), si no, red, y cachea
+  // Navegación: devolver index offline
   if (req.mode === "navigate") {
-    event.respondWith(
-      (async () => {
-        const cache = await caches.open(CACHE_NAME);
-        const cached = await cache.match("/index.html");
-        try {
-          const fresh = await fetch(req);
-          // guarda copia por si cambia index
-          cache.put("/index.html", fresh.clone());
-          return fresh;
-        } catch (e) {
-          return cached || new Response("Offline", { status: 200, headers: { "Content-Type": "text/plain" } });
-        }
-      })()
-    );
+    event.respondWith((async () => {
+      const cached = await caches.match("./index.html");
+      try {
+        const fresh = await fetch(req);
+        const cache = await caches.open(STATIC_CACHE);
+        cache.put("./index.html", fresh.clone());
+        return fresh;
+      } catch (e) {
+        return cached || Response.error();
+      }
+    })());
     return;
   }
 
-  // Assets: cache-first, si baja algo nuevo lo actualiza
-  event.respondWith(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      const cached = await cache.match(req);
-      if (cached) return cached;
+  // Mismo origen: cache-first para estáticos / runtime
+  if (isSameOrigin(req)) {
+    event.respondWith(cacheFirst(req));
+    return;
+  }
 
-      try {
-        const fresh = await fetch(req);
-        // cachea solo respuestas OK
-        if (fresh && fresh.status === 200) cache.put(req, fresh.clone());
-        return fresh;
-      } catch (e) {
-        // sin red y sin cache
-        return new Response("", { status: 504 });
-      }
-    })()
-  );
+  // Externo (si hubiera): network-first con fallback cache
+  event.respondWith(networkFirst(req));
 });
