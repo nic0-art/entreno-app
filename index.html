@@ -1,192 +1,232 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Entreno App</title>
+  <title>Entreno App</title>
 
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icon-192.png">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<meta name="theme-color" content="#00ff9c">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#00ff9c">
 
-<style>
-  *{ box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; }
-  body{ margin:0; background:#050a08; color:#d7ffe9; }
-  .app{ max-width:420px; margin:auto; min-height:100vh; display:flex; flex-direction:column; padding:14px; }
+  <style>
+    *{ box-sizing:border-box; font-family:'Segoe UI', system-ui, sans-serif; }
+    body{ margin:0; background:#050a08; color:#d7ffe9; }
+    .app{ max-width:420px; margin:auto; min-height:100vh; display:flex; flex-direction:column; padding:14px; }
 
-  .header{ text-align:center; margin-bottom:12px; }
-  .header h1{ margin:6px 0 2px; color:#00ff9c; }
-  .header p{ margin:0; font-size:13px; opacity:.75; }
+    .header{ text-align:center; margin-bottom:12px; }
+    .header h1{ margin:6px 0 2px; color:#00ff9c; }
+    .header p{ margin:0; font-size:13px; opacity:.75; }
 
-  .status-box{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
-  .status{ flex:1; padding:6px; border-radius:10px; text-align:center; font-size:11px; border:1px solid rgba(0,255,160,.25); }
-  .green{ color:#00ff9c } .yellow{ color:#ffd000 }
+    .status-box{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
+    .status{ flex:1; padding:6px; border-radius:10px; text-align:center; font-size:11px; border:1px solid rgba(0,255,160,.25); }
+    .green{ color:#00ff9c } .yellow{ color:#ffd000 }
 
-  .btn{
-    width:100%; padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.4);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; margin-bottom:10px; font-weight:600;
-  }
-  .btn-main{ background:rgba(0,255,160,.12); border:1px solid #00ff9c; }
+    .btn{
+      width:100%; padding:12px; border-radius:14px;
+      background:rgba(0,0,0,.4);
+      border:1px solid rgba(0,255,160,.25);
+      color:#d7ffe9; margin-bottom:10px; font-weight:700;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn-main{ background:rgba(0,255,160,.12); border:1px solid #00ff9c; }
 
-  .panel{
-    margin-top:12px; padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.35);
-    border:1px solid rgba(0,255,160,.2);
-  }
+    .panel{
+      margin-top:12px; padding:12px; border-radius:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(0,255,160,.2);
+    }
 
-  .screen{ display:none; }
-  .screen.active{ display:block; }
+    .screen{ display:none; }
+    .screen.active{ display:block; }
 
-  .nav{
-    margin-top:auto; display:flex; justify-content:space-around;
-    padding:10px 0; border-top:1px solid rgba(0,255,160,.2);
-    gap:4px; flex-wrap:wrap;
-  }
-  .nav button{ background:none; border:none; color:#aaa; font-size:12px; padding:6px 4px; }
-  .nav button.active{ color:#00ff9c; font-weight:bold; }
+    .nav{
+      margin-top:auto; display:flex; justify-content:space-around;
+      padding:10px 0; border-top:1px solid rgba(0,255,160,.2);
+      gap:4px; flex-wrap:wrap;
+    }
+    .nav button{ background:none; border:none; color:#aaa; font-size:12px; padding:8px 6px; }
+    .nav button.active{ color:#00ff9c; font-weight:800; }
 
-  .log-card{
-    padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.30);
-    border:1px solid rgba(0,255,160,.15);
-    margin:10px 0;
-    white-space:pre-wrap;
-  }
-  .log-meta{ opacity:.75; font-size:12px; }
+    .log-card{
+      padding:10px; border-radius:12px;
+      background:rgba(0,0,0,.30);
+      border:1px solid rgba(0,255,160,.15);
+      margin:10px 0;
+      white-space:pre-wrap;
+    }
+    .log-meta{ opacity:.75; font-size:12px; }
 
-  .row{ display:flex; gap:10px; }
-  .row .btn{ width:auto; flex:1; margin-bottom:0; }
+    .row{ display:flex; gap:10px; }
+    .row .btn{ width:auto; flex:1; margin-bottom:0; }
 
-  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
-  .field span{ font-size:12px; opacity:.8; }
-  .field input, .field select{
-    padding:12px; border-radius:14px;
-    background:rgba(0,0,0,.4);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; outline:none;
-  }
-  .field input:focus, .field select:focus{ border-color:#00ff9c; }
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    .field span{ font-size:12px; opacity:.8; }
+    .field input, .field select{
+      padding:12px; border-radius:14px;
+      background:rgba(0,0,0,.4);
+      border:1px solid rgba(0,255,160,.25);
+      color:#d7ffe9; outline:none;
+    }
+    .field input:focus, .field select:focus{ border-color:#00ff9c; }
 
-  .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,0,0,.65);
-    display:none; align-items:flex-end; justify-content:center;
-    padding:14px; z-index:9999;
-  }
-  .modal-backdrop.show{ display:flex; }
+    /* Modal táctil */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.65);
+      display:none; align-items:flex-end; justify-content:center;
+      padding:14px; z-index:9999;
+    }
+    .modal-backdrop.show{ display:flex; }
 
-  .modal{
-    width:100%; max-width:420px; background:#050a08;
-    border:1px solid rgba(0,255,160,.25);
-    border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.6);
-    overflow:hidden; transform:translateY(10px);
-  }
+    .modal{
+      width:100%; max-width:420px; background:#050a08;
+      border:1px solid rgba(0,255,160,.25);
+      border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.6);
+      overflow:hidden; transform:translateY(10px);
+    }
 
-  .modal-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:12px 12px 10px; border-bottom:1px solid rgba(0,255,160,.15);
-  }
-  .modal-title{ font-weight:800; color:#00ff9c; letter-spacing:.5px; }
-  .modal-close{
-    background:transparent; border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; border-radius:12px; padding:6px 10px;
-  }
-  .modal-body{ padding:12px; }
-  .modal-actions{
-    display:flex; gap:10px; padding:12px;
-    border-top:1px solid rgba(0,255,160,.15);
-  }
-  .modal-actions .btn{ flex:1; margin:0; }
+    .modal-head{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 12px 10px; border-bottom:1px solid rgba(0,255,160,.15);
+    }
+    .modal-title{ font-weight:900; color:#00ff9c; letter-spacing:.5px; }
+    .modal-sub{ font-size:12px; opacity:.8; margin-top:3px; }
+    .modal-close{
+      background:transparent; border:1px solid rgba(0,255,160,.25);
+      color:#d7ffe9; border-radius:12px; padding:6px 10px;
+      font-weight:800;
+    }
+    .modal-body{ padding:12px; }
+    .modal-actions{
+      display:flex; gap:10px; padding:12px;
+      border-top:1px solid rgba(0,255,160,.15);
+    }
+    .modal-actions .btn{ flex:1; margin:0; }
 
-  .toast{
-    position:fixed; left:50%; bottom:78px; transform:translateX(-50%);
-    background:rgba(0,0,0,.85);
-    border:1px solid rgba(0,255,160,.25);
-    color:#d7ffe9; padding:10px 14px; border-radius:14px;
-    z-index:10000; display:none;
-  }
+    .toast{
+      position:fixed; left:50%; bottom:78px; transform:translateX(-50%);
+      background:rgba(0,0,0,.85);
+      border:1px solid rgba(0,255,160,.25);
+      color:#d7ffe9; padding:10px 14px; border-radius:14px;
+      z-index:10000; display:none;
+    }
 
-  .mini-actions{ display:flex; gap:8px; margin-top:10px; }
-  .mini{
-    flex:1; padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.35);
-    border:1px solid rgba(0,255,160,.18);
-    color:#d7ffe9; font-weight:600;
-  }
-  .mini.danger{ border-color:rgba(255,80,80,.6); }
+    .mini-actions{ display:flex; gap:8px; margin-top:10px; }
+    .mini{
+      flex:1; padding:10px; border-radius:12px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(0,255,160,.18);
+      color:#d7ffe9; font-weight:800;
+    }
+    .mini.danger{ border-color:rgba(255,80,80,.6); }
 
-  .kpi-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
-  .kpi{
-    padding:10px; border-radius:12px;
-    background:rgba(0,0,0,.28);
-    border:1px solid rgba(0,255,160,.12);
-  }
-  .kpi .k{ font-size:12px; opacity:.8; }
-  .kpi .v{ font-size:18px; font-weight:800; margin-top:4px; color:#00ff9c; }
+    .kpi-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
+    .kpi{
+      padding:10px; border-radius:12px;
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(0,255,160,.12);
+    }
+    .kpi .k{ font-size:12px; opacity:.8; }
+    .kpi .v{ font-size:18px; font-weight:900; margin-top:4px; color:#00ff9c; }
 
-  .table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
-  .table th, .table td{
-    border-bottom:1px solid rgba(0,255,160,.12);
-    padding:8px 6px;
-    text-align:left;
-    vertical-align:top;
-  }
-  .table th{ color:#00ff9c; font-weight:800; }
-  .pill{
-    display:inline-block; padding:4px 8px; border-radius:999px;
-    border:1px solid rgba(0,255,160,.2);
-    background:rgba(0,255,160,.08);
-    font-size:11px; opacity:.95;
-  }
-  .muted{ opacity:.75; }
+    .table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
+    .table th, .table td{
+      border-bottom:1px solid rgba(0,255,160,.12);
+      padding:8px 6px;
+      text-align:left;
+      vertical-align:top;
+    }
+    .table th{ color:#00ff9c; font-weight:900; }
+    .pill{
+      display:inline-block; padding:4px 8px; border-radius:999px;
+      border:1px solid rgba(0,255,160,.2);
+      background:rgba(0,255,160,.08);
+      font-size:11px; opacity:.95;
+    }
+    .muted{ opacity:.75; }
 
-  .banner{
-    margin-top:12px;
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px solid rgba(0,255,160,.18);
-    background:rgba(0,255,160,.06);
-  }
-  .banner .t{ color:#00ff9c; font-weight:800; margin-bottom:4px; }
-  .banner .s{ font-size:12px; opacity:.85; line-height:1.3; }
+    .banner{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(0,255,160,.18);
+      background:rgba(0,255,160,.06);
+    }
+    .banner .t{ color:#00ff9c; font-weight:900; margin-bottom:4px; }
+    .banner .s{ font-size:12px; opacity:.85; line-height:1.3; }
 
-  #installBtnMission, #installBtnSettings { display:none; }
+    /* Botón instalar oculto por defecto */
+    #installBtnMission, #installBtnSettings { display:none; }
 
-  .week-grid{
-    display:grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap:8px;
-    margin-top:10px;
-  }
-  .day{
-    padding:10px 6px;
-    border-radius:12px;
-    background:rgba(0,0,0,.25);
-    border:1px solid rgba(0,255,160,.12);
-    text-align:center;
-    min-height:64px;
-  }
-  .day .d{ font-weight:800; color:#00ff9c; font-size:12px; }
-  .day .n{ font-size:12px; margin-top:6px; }
-  .day .m{ font-size:11px; opacity:.75; margin-top:4px; }
-  .day.done{
-    border-color: rgba(0,255,160,.35);
-    background: rgba(0,255,160,.08);
-  }
-  .day.today{
-    outline:2px solid rgba(255,208,0,.55);
-  }
-  .chip{
-    display:inline-block; margin-top:6px;
-    font-size:10px; padding:3px 6px;
-    border-radius:999px;
-    border:1px solid rgba(0,255,160,.22);
-    background:rgba(0,255,160,.08);
-  }
-</style>
+    .week-grid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+      margin-top:10px;
+    }
+    .day{
+      padding:10px 6px;
+      border-radius:12px;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(0,255,160,.12);
+      text-align:center;
+      min-height:64px;
+    }
+    .day .d{ font-weight:900; color:#00ff9c; font-size:12px; }
+    .day .n{ font-size:12px; margin-top:6px; }
+    .day .m{ font-size:11px; opacity:.75; margin-top:4px; }
+    .day.done{
+      border-color: rgba(0,255,160,.35);
+      background: rgba(0,255,160,.08);
+    }
+    .day.today{
+      outline:2px solid rgba(255,208,0,.55);
+    }
+    .chip{
+      display:inline-block; margin-top:6px;
+      font-size:10px; padding:3px 6px;
+      border-radius:999px;
+      border:1px solid rgba(0,255,160,.22);
+      background:rgba(0,255,160,.08);
+    }
+
+    /* Lista de ejercicios clicables */
+    .workout-list{ margin-top:10px; }
+    .w-item{
+      border:1px solid rgba(0,255,160,.15);
+      background:rgba(0,0,0,.28);
+      border-radius:14px;
+      padding:10px;
+      margin:10px 0;
+    }
+    .w-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .w-title{ font-weight:900; }
+    .w-sub{ font-size:12px; opacity:.75; margin-top:4px; }
+    .w-btn{
+      border:1px solid rgba(0,255,160,.25);
+      background:rgba(0,255,160,.10);
+      color:#d7ffe9;
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:900;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .w-btn:active{ transform: translateY(1px); }
+    .last-hint{
+      margin-top:8px;
+      font-size:12px;
+      opacity:.85;
+      border-top:1px dashed rgba(0,255,160,.18);
+      padding-top:8px;
+    }
+    .inline{ display:flex; align-items:center; gap:10px; }
+    .checkline{ display:flex; align-items:center; gap:10px; margin-top:8px; }
+    input[type="checkbox"]{ transform: scale(1.2); }
+  </style>
 </head>
 
 <body>
@@ -199,7 +239,7 @@
     <div class="status-box">
       <div class="status green">● STATUS: OK</div>
       <div class="status yellow">● OBJETIVO: FUERZA MAGRA</div>
-      <div class="status green">● SYNC: CAPACITOR</div>
+      <div class="status green">● SYNC: OFFLINE READY</div>
     </div>
 
     <div id="screen-mision" class="screen active">
@@ -224,7 +264,8 @@
     <div id="screen-entreno" class="screen">
       <div class="panel">
         <h3>ENTRENO DE HOY</h3>
-        <div id="workoutBox" class="log-card"></div>
+        <div id="workoutHeader" class="log-card"></div>
+        <div id="workoutList" class="workout-list"></div>
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">CALENDARIO (MANUAL)</h3>
@@ -252,8 +293,8 @@
         </div>
 
         <label class="field" style="margin-top:10px;">
-          <span>Ejercicio a registrar</span>
-          <input id="quickExercise" type="text" placeholder="Ej: Prensa inclinada" />
+          <span>Ejercicio a registrar (rápido)</span>
+          <input id="quickExercise" type="text" placeholder="Ej: Prensa inclinada / Plancha" />
         </label>
 
         <button class="btn btn-main" onclick="registrarSerieDesdeEntreno()">REGISTRAR SERIE (ENTRENO)</button>
@@ -284,13 +325,13 @@
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">PRs e1RM (estimado)</h3>
-          <div class="log-meta">Cálculo e1RM: <span class="pill">Epley</span> (peso efectivo × (1 + reps/30))</div>
+          <div class="log-meta">Epley: <span class="pill">peso × (1 + reps/30)</span> (solo con peso)</div>
           <div id="prBox"></div>
         </div>
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">Top ejercicios (últimos 28 días)</h3>
-          <div class="log-meta">Series y tonelaje (peso efectivo×reps). Mancuernas = ×2 automático.</div>
+          <div class="log-meta">Series y tonelaje (peso×reps). Mancuernas “por mano” cuentan x2 en tonelaje.</div>
           <div id="topBox"></div>
         </div>
       </div>
@@ -305,13 +346,13 @@
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">Prioridades (últimos 28 días)</h3>
-          <div class="log-meta">Series y volumen (peso efectivo si hay). Clasificación por nombre del ejercicio.</div>
+          <div class="log-meta">Series + tonelaje estimado (si hay peso). Tiempo no suma tonelaje.</div>
           <div id="prioBox"></div>
         </div>
 
         <div class="panel" style="margin-top:10px;">
           <h3 style="margin:0 0 8px;">Volumen semanal (últimas 8 semanas)</h3>
-          <div class="log-meta">Tonnage = peso efectivo×reps. Si faltan pesos, solo cuenta series.</div>
+          <div class="log-meta">Tonelaje = peso×reps (mancuernas por mano x2). Si falta peso, solo cuenta series.</div>
           <div id="weeklyBox"></div>
         </div>
       </div>
@@ -407,46 +448,74 @@
     </div>
   </div>
 
-  <!-- ===== MODAL ===== -->
+  <!-- MODAL -->
   <div id="modal" class="modal-backdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-label="Registrar serie">
       <div class="modal-head">
-        <div id="modalTitle" class="modal-title">REGISTRAR SERIE</div>
+        <div>
+          <div id="modalTitle" class="modal-title">REGISTRAR SERIE</div>
+          <div id="modalSub" class="modal-sub"></div>
+        </div>
         <button class="modal-close" id="modalClose" aria-label="Cerrar">✕</button>
       </div>
 
       <div class="modal-body">
         <label class="field">
           <span>Ejercicio</span>
-          <input id="mEjercicio" type="text" placeholder="Ej: Press mancuernas inclinado" />
+          <input id="mEjercicio" type="text" placeholder="Ej: Prensa inclinada / Plancha" />
         </label>
 
         <label class="field">
           <span>Implemento</span>
-          <select id="mImplement">
-            <option value="barbell">Barra (peso total)</option>
-            <option value="dumbbell">Mancuernas (peso de UNA mancuerna)</option>
-            <option value="machine">Máquina / Polea</option>
-            <option value="bodyweight">Peso corporal</option>
-            <option value="time">Tiempo (core/isométricos)</option>
+          <select id="mImpl">
+            <option value="barra">Barra</option>
+            <option value="mancuernas">Mancuernas</option>
+            <option value="maquina">Máquina/Polea</option>
+            <option value="peso_corporal">Peso corporal</option>
+            <option value="tiempo">Tiempo (core/isométricos)</option>
           </select>
         </label>
 
-        <div class="row">
-          <label class="field" style="flex:1;">
-            <span>Peso (kg)</span>
-            <input id="mPeso" type="number" inputmode="decimal" placeholder="0" />
-          </label>
-          <label class="field" style="flex:1;">
-            <span>Reps / Segundos</span>
-            <input id="mReps" type="number" inputmode="numeric" placeholder="0" />
-          </label>
+        <div id="mWeightBlock">
+          <div class="row">
+            <label class="field" style="flex:1;">
+              <span>Peso (kg)</span>
+              <input id="mPeso" type="number" inputmode="decimal" placeholder="0" />
+            </label>
+
+            <label class="field" style="flex:1;">
+              <span>Reps</span>
+              <input id="mReps" type="number" inputmode="numeric" placeholder="0" />
+            </label>
+          </div>
+
+          <div class="checkline" id="mPerHandLine" style="display:none;">
+            <input id="mPerHand" type="checkbox" />
+            <label for="mPerHand" style="font-size:12px; opacity:.9; cursor:pointer;">
+              Mancuernas: <b>peso por mano</b> (tonelaje x2)
+            </label>
+          </div>
         </div>
 
-        <div class="row">
+        <div id="mTimeBlock" style="display:none;">
+          <div class="row">
+            <label class="field" style="flex:1;">
+              <span>Tiempo (segundos)</span>
+              <input id="mTimeSec" type="number" inputmode="numeric" placeholder="45" />
+            </label>
+
+            <label class="field" style="flex:1;">
+              <span>Serie nº</span>
+              <input id="mSerie" type="number" inputmode="numeric" placeholder="1" />
+            </label>
+          </div>
+          <div class="log-meta">* Para core/cuello/plancha. Si quieres “reps”, usa el modo peso.</div>
+        </div>
+
+        <div id="mSerieLine" class="row">
           <label class="field" style="flex:1;">
             <span>Serie nº</span>
-            <input id="mSerie" type="number" inputmode="numeric" placeholder="1" />
+            <input id="mSerie2" type="number" inputmode="numeric" placeholder="1" />
           </label>
           <label class="field" style="flex:1;">
             <span>RPE (opcional)</span>
@@ -454,11 +523,12 @@
           </label>
         </div>
 
-        <div class="log-meta" id="implementHint" style="margin-top:6px;"></div>
+        <div id="mLast" class="log-card" style="display:none;"></div>
       </div>
 
       <div class="modal-actions">
         <button class="btn" id="modalCancel">Cancelar</button>
+        <button class="btn" id="modalSaveRepeat">Guardar + repetir</button>
         <button class="btn btn-main" id="modalSave">Guardar</button>
       </div>
     </div>
@@ -470,8 +540,8 @@
     /* =========================
        VERSIONES
     ========================= */
-    const APP_VERSION = "EntrenoApp-PWA 1.3.0";
-    const CACHE_VERSION = "entreno-app-v4"; // debe coincidir con sw.js
+    const APP_VERSION = "Entreno-PWA 1.3.0";
+    const CACHE_VERSION = "entreno-cache-v5"; // debe coincidir con sw.js
 
     /* =========================
        INSTALL: beforeinstallprompt
@@ -501,7 +571,7 @@
 
     async function instalarApp(){
       if(!deferredInstallPrompt){
-        showToast("ℹ️ Usa menú ⋮ → Instalar / Añadir a pantalla.");
+        showToast("ℹ️ Menú ⋮ → Instalar app / Añadir a pantalla.");
         return;
       }
       deferredInstallPrompt.prompt();
@@ -520,7 +590,7 @@
       if(!t) return;
       t.textContent = msg;
       t.style.display = "block";
-      setTimeout(()=> t.style.display="none", 1400);
+      setTimeout(()=> t.style.display="none", 1300);
     }
     function uid(){
       try { return crypto.randomUUID(); }
@@ -599,31 +669,32 @@
       { key:"D4", name:"D4 · Full suave + Cuello", focus:"Full suave + Core + Cuello (prioridad)" }
     ];
 
+    // Bloques como objetos (para click + prefill)
     const blocks = {
       D1: [
-        "EJ PRINCIPAL: Press pecho máquina/mancuernas · 4×6–8",
-        "Accesorio: Elevaciones laterales · 3×10–12",
-        "Accesorio: Fondos/Tríceps polea · 3×8–12",
-        "PRIORIDAD: Gemelo sentado · 5×12–20"
+        { tag:"EJ PRINCIPAL", ex:"Press pecho máquina/mancuernas", detail:"4×6–8", hintImpl:"auto" },
+        { tag:"Accesorio", ex:"Elevaciones laterales", detail:"3×10–12", hintImpl:"mancuernas" },
+        { tag:"Accesorio", ex:"Fondos / Tríceps en polea", detail:"3×8–12", hintImpl:"maquina" },
+        { tag:"PRIORIDAD", ex:"Gemelo sentado", detail:"5×12–20", hintImpl:"maquina" }
       ],
       D2: [
-        "EJ PRINCIPAL: Remo con pecho apoyado · 4×6–8 (sin lumbar)",
-        "Accesorio: Jalón al pecho · 3×8–10",
-        "Accesorio: Curl bíceps · 3×10–12",
-        "PRIORIDAD: Antebrazo (curl muñeca + reverse curl) · 5×12–20"
+        { tag:"EJ PRINCIPAL", ex:"Remo con pecho apoyado", detail:"4×6–8", hintImpl:"barra" },
+        { tag:"Accesorio", ex:"Jalón al pecho", detail:"3×8–10", hintImpl:"maquina" },
+        { tag:"Accesorio", ex:"Curl bíceps", detail:"3×10–12", hintImpl:"mancuernas" },
+        { tag:"PRIORIDAD", ex:"Curl muñeca / Reverse curl", detail:"5×12–20", hintImpl:"mancuernas" }
       ],
       D3: [
-        "EJ PRINCIPAL: Prensa inclinada · 5×8–12",
-        "Accesorio: Curl femoral · 4×10–12",
-        "Sustituto PM: Hip Thrust · 4×8–12",
-        "PRIORIDAD: Gemelo de pie · 5×12–20",
-        "Opcional: Step-ups / Hack squat máquina · 2–3×8–12"
+        { tag:"EJ PRINCIPAL", ex:"Prensa inclinada", detail:"5×8–12", hintImpl:"maquina" },
+        { tag:"Accesorio", ex:"Curl femoral", detail:"4×10–12", hintImpl:"maquina" },
+        { tag:"Sustituto PM", ex:"Hip Thrust", detail:"4×8–12", hintImpl:"barra" },
+        { tag:"PRIORIDAD", ex:"Gemelo de pie", detail:"5×12–20", hintImpl:"maquina" },
+        { tag:"Opcional", ex:"Step-ups / Hack squat máquina", detail:"2–3×8–12", hintImpl:"maquina" }
       ],
       D4: [
-        "Bilbo suave: Press inclinado ligero · 3×8–10",
-        "Accesorio: Remo ligero · 3×8–10",
-        "Core: plancha/antirotación · 4×30–45s",
-        "PRIORIDAD: Cuello (flex/ext/lat) · 5×15–20"
+        { tag:"Bilbo suave", ex:"Press inclinado ligero", detail:"3×8–10", hintImpl:"mancuernas" },
+        { tag:"Accesorio", ex:"Remo ligero", detail:"3×8–10", hintImpl:"mancuernas" },
+        { tag:"Core", ex:"Plancha / Antirotación", detail:"4×30–45s", hintImpl:"tiempo" },
+        { tag:"PRIORIDAD", ex:"Cuello (flex/ext/lat)", detail:"5×15–20 ó 30–45s", hintImpl:"tiempo" }
       ]
     };
 
@@ -687,25 +758,6 @@
       showToast("✅ Override quitado");
     }
 
-    function renderWorkoutToday(){
-      const w = workoutToday();
-      const box = document.getElementById("workoutBox");
-      if(box){
-        const text = (blocks[w.key] || []).map(x=>`• ${x}`).join("\n");
-        const flag = w.override ? " (MANUAL)" : " (AUTO)";
-        box.textContent = `${w.name}${flag}\n${w.focus}\n\n📅 ${w.date}\n\n${text}`;
-      }
-
-      const qe = document.getElementById("quickExercise");
-      if(qe && !qe.value){
-        const defaults = { D1:"Press pecho máquina/mancuernas", D2:"Remo con pecho apoyado", D3:"Prensa inclinada", D4:"Press inclinado ligero" };
-        qe.value = defaults[w.key] || "";
-      }
-      syncOverrideUI();
-      renderReminder();
-      renderPhaseHint();
-    }
-
     function abrirEntreno(){
       setActiveNav("entreno");
       showScreen("entreno");
@@ -752,7 +804,6 @@
       const activeId = getActivePhaseId();
       sel.innerHTML = phases.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
       sel.value = activeId;
-
       renderPhaseHint();
     }
 
@@ -762,11 +813,12 @@
       setActivePhase(sel.value);
       showToast("✅ Fase activa cambiada");
       renderPhaseHint();
+      renderWorkoutToday();
+      renderLog();
+      renderNivel();
+      renderStats();
+      renderCalendar();
       renderReminder();
-      if(screens.stats.classList.contains("active")) renderStats();
-      if(screens.nivel.classList.contains("active")) renderNivel();
-      if(screens.cal.classList.contains("active")) renderCalendar();
-      if(screens.log.classList.contains("active")) renderLog();
     }
 
     function crearFase(){
@@ -789,7 +841,7 @@
         showToast("⚠️ No puedes borrar la fase principal");
         return;
       }
-      if(!confirm(`¿Borrar fase "${active.name}"? (No borra tus series, pero algunas quedarán “huérfanas”)`)) return;
+      if(!confirm(`¿Borrar fase "${active.name}"? (No borra tus series, pero quedarán huérfanas)`)) return;
 
       const phases = readPhases().filter(p=>p.id !== active.id);
       writePhases(phases);
@@ -807,54 +859,10 @@
     }
 
     /* =========================
-       IMPLEMENTOS (NUEVO)
-       - barbell: peso total
-       - dumbbell: peso de UNA mancuerna (peso efectivo = x2)
-       - machine: tal cual
-       - bodyweight: peso opcional (si no pones, tonelaje no suma)
-       - time: reps = segundos, peso opcional
+       LOG (v3)
     ========================= */
-    const IMPLEMENT_LABEL = {
-      barbell: "Barra",
-      dumbbell: "Mancuernas (x2)",
-      machine: "Máquina",
-      bodyweight: "Peso corporal",
-      time: "Tiempo"
-    };
-
-    function inferImplementFromName(ex){
-      const e = norm(ex);
-      if(e.includes("mancuer")) return "dumbbell";
-      if(e.includes("db ")) return "dumbbell";
-      if(e.includes("dumbbell")) return "dumbbell";
-      if(e.includes("barra") || e.includes("barbell")) return "barbell";
-      if(e.includes("polea") || e.includes("máquina") || e.includes("maquina") || e.includes("machine")) return "machine";
-      if(e.includes("plancha") || e.includes("isométr") || e.includes("isomet") || e.includes("seg") || e.includes("segundos")) return "time";
-      return "barbell";
-    }
-
-    function effectiveWeightKg(item){
-      const impl = item.implement || inferImplementFromName(item.ejercicio);
-      const w = toNum(item.peso);
-      if(!Number.isFinite(w) || w <= 0) return NaN;
-      if(impl === "dumbbell") return w * 2;
-      return w;
-    }
-
-    function displayWeight(item){
-      const impl = item.implement || inferImplementFromName(item.ejercicio);
-      const w = toNum(item.peso);
-      if(!Number.isFinite(w) || w <= 0) return "-";
-      if(impl === "dumbbell") return `${w} kg (x2)`;
-      return `${w} kg`;
-    }
-
-    /* =========================
-       LOG + MIGRACIÓN
-    ========================= */
-    const LS_LOG_V1 = "bilbo_log_v1";
-    const LS_LOG = "bilbo_log_v3";            // guardamos todo aquí
-    const LS_MIGRATED = "bilbo_log_migrated_to_v3";
+    const LS_LOG = "bilbo_log_v3";            // incluye phaseId + impl + timeSec + perHand
+    const LS_MIGRATED = "bilbo_log_migrated_to_v3_2";
     const LS_MISSION = "bilbo_mission_v1";
 
     function safeParse(key){
@@ -889,7 +897,8 @@
         return;
       }
 
-      const candidates = ["bilbo_log_v2", LS_LOG_V1];
+      // Intentar traer del log viejo si existe
+      const candidates = ["bilbo_log_v2", "bilbo_log_v1"];
       let source = [];
       for(const k of candidates){
         const arr = safeParse(k);
@@ -919,8 +928,10 @@
         reps: it.reps || "",
         serie: it.serie || "",
         rpe: it.rpe || "",
-        implement: it.implement || inferImplementFromName(it.ejercicio || ""),
-        phaseId: it.phaseId || "phase_default"
+        phaseId: it.phaseId || "phase_default",
+        impl: it.impl || guessImplementFromText(it.ejercicio || ""),
+        perHand: !!it.perHand,
+        timeSec: it.timeSec || ""
       }));
 
       writeLogAll(converted);
@@ -929,56 +940,184 @@
     }
 
     /* =========================
-       MODAL registrar/editar (MEJORADO)
+       Autodetección implemento
+    ========================= */
+    function guessImplementFromText(ex){
+      const e = norm(ex);
+      if(!e) return "barra";
+      if(e.includes("plancha") || e.includes("isométr") || e.includes("isometr") || e.includes("antirot") || e.includes("cuello") && e.includes("s")) return "tiempo";
+      if(e.includes("tiempo") || e.includes("seg") || e.includes("seconds") || e.includes("s ")) return "tiempo";
+      if(e.includes("mancuer")) return "mancuernas";
+      if(e.includes("polea") || e.includes("jalón") || e.includes("jalon") || e.includes("máquina") || e.includes("maquina") || e.includes("prensa") || e.includes("curl femoral")) return "maquina";
+      if(e.includes("peso corporal") || e.includes("dominada") || e.includes("flexion") || e.includes("flexión") || e.includes("fondos")) return "peso_corporal";
+      if(e.includes("barra")) return "barra";
+      return "barra";
+    }
+
+    /* =========================
+       Workout render: clickable
+    ========================= */
+    function renderWorkoutToday(){
+      const w = workoutToday();
+      const header = document.getElementById("workoutHeader");
+      const list = document.getElementById("workoutList");
+
+      const flag = w.override ? " (MANUAL)" : " (AUTO)";
+      if(header){
+        header.textContent = `${w.name}${flag}\n${w.focus}\n\n📅 ${w.date}`;
+      }
+
+      const qe = document.getElementById("quickExercise");
+      if(qe && !qe.value){
+        const defaults = { D1:"Press pecho máquina/mancuernas", D2:"Remo con pecho apoyado", D3:"Prensa inclinada", D4:"Plancha" };
+        qe.value = defaults[w.key] || "";
+      }
+
+      if(list){
+        const items = blocks[w.key] || [];
+        list.innerHTML = items.map((it) => {
+          const last = getLastSetForExercise(it.ex);
+          const lastHtml = last ? `
+            <div class="last-hint">
+              Última: <span class="pill">${formatSetShort(last)}</span>
+            </div>` : `<div class="last-hint muted">Sin registros previos de este ejercicio.</div>`;
+
+          return `
+            <div class="w-item">
+              <div class="w-top">
+                <div>
+                  <div class="w-title">${it.tag}: ${it.ex}</div>
+                  <div class="w-sub">${it.detail}</div>
+                </div>
+                <button class="w-btn" onclick="registrarSeriePrefill('${escapeQuotes(it.ex)}','${it.hintImpl || "auto"}')">Registrar</button>
+              </div>
+              ${lastHtml}
+            </div>
+          `;
+        }).join("");
+      }
+
+      syncOverrideUI();
+      renderReminder();
+      renderPhaseHint();
+    }
+
+    function escapeQuotes(s){
+      return String(s||"").replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    }
+
+    /* =========================
+       Última serie por ejercicio
+    ========================= */
+    function sameExercise(a,b){
+      return norm(a) === norm(b);
+    }
+    function getLastSetForExercise(ex){
+      const log = readLog();
+      const found = log.find(x => sameExercise(x.ejercicio, ex));
+      return found || null;
+    }
+    function formatSetShort(it){
+      const impl = it.impl || "barra";
+      if(impl === "tiempo"){
+        const sec = it.timeSec || it.reps || "";
+        return `${sec || "?"}s · S${it.serie || "-"}` + (it.rpe ? ` · RPE ${it.rpe}` : "");
+      }
+      const per = (impl==="mancuernas" && it.perHand) ? " (por mano)" : "";
+      return `${it.peso || "-"}kg${per} × ${it.reps || "-"} · S${it.serie || "-"}` + (it.rpe ? ` · RPE ${it.rpe}` : "");
+    }
+
+    /* =========================
+       MODAL registrar/editar
     ========================= */
     let EDITING_ID = null;
 
-    function updateImplementHint(){
-      const impl = document.getElementById("mImplement")?.value || "barbell";
-      const hint = document.getElementById("implementHint");
-      const pesoInput = document.getElementById("mPeso");
-      const repsLabel = document.querySelector('label[for="mReps"]');
+    function setModalModeByImpl(impl){
+      const weightBlock = document.getElementById("mWeightBlock");
+      const timeBlock = document.getElementById("mTimeBlock");
+      const serieLine = document.getElementById("mSerieLine");
+      const perLine = document.getElementById("mPerHandLine");
 
-      if(!hint) return;
-      if(impl === "dumbbell"){
-        hint.textContent = "Mancuernas: escribe el peso de UNA mancuerna. La app calcula ×2 para tonelaje/PR.";
-      }else if(impl === "time"){
-        hint.textContent = "Tiempo: usa “Reps/Segundos” para registrar segundos (ej: plancha 45). Peso opcional.";
+      if(impl === "tiempo"){
+        if(weightBlock) weightBlock.style.display = "none";
+        if(timeBlock) timeBlock.style.display = "block";
+        if(serieLine) serieLine.style.display = "none";
+        if(perLine) perLine.style.display = "none";
       }else{
-        hint.textContent = `Implemento: ${IMPLEMENT_LABEL[impl] || impl}.`;
-      }
-
-      // Si es "time", permitimos peso vacío y reps como segundos.
-      if(pesoInput){
-        pesoInput.placeholder = (impl === "bodyweight" || impl === "time") ? "(opcional)" : "0";
+        if(weightBlock) weightBlock.style.display = "block";
+        if(timeBlock) timeBlock.style.display = "none";
+        if(serieLine) serieLine.style.display = "flex";
+        if(perLine) perLine.style.display = (impl === "mancuernas") ? "flex" : "none";
       }
     }
 
-    function abrirModalSerie(ejercicio = "", prefill = null){
+    function fillLastHint(ex){
+      const box = document.getElementById("mLast");
+      const last = getLastSetForExercise(ex);
+      if(!box){ return; }
+      if(!last){
+        box.style.display = "none";
+        box.textContent = "";
+        return;
+      }
+      box.style.display = "block";
+      box.textContent = `Última registrada (fase):\n${last.ejercicio}\n${formatSetShort(last)}`;
+    }
+
+    function abrirModalSerie(ejercicio = "", hintImpl = "auto", prefill = null){
       const modal = document.getElementById("modal");
       const title = document.getElementById("modalTitle");
+      const sub = document.getElementById("modalSub");
+      const w = workoutToday();
+
+      if(sub) sub.textContent = `${getActivePhase().name} · ${w.date} · ${w.key}`;
+
+      const implSelect = document.getElementById("mImpl");
+      const perHand = document.getElementById("mPerHand");
 
       if(prefill){
         EDITING_ID = prefill.id || null;
         title.textContent = "EDITAR SERIE";
+
         document.getElementById("mEjercicio").value = prefill.ejercicio || "";
-        document.getElementById("mImplement").value = prefill.implement || inferImplementFromName(prefill.ejercicio || "");
+        const impl = prefill.impl || guessImplementFromText(prefill.ejercicio || "");
+        implSelect.value = impl;
+
         document.getElementById("mPeso").value = prefill.peso || "";
         document.getElementById("mReps").value = prefill.reps || "";
-        document.getElementById("mSerie").value = prefill.serie || "1";
+        document.getElementById("mSerie2").value = prefill.serie || "1";
         document.getElementById("mRpe").value = prefill.rpe || "";
+
+        document.getElementById("mTimeSec").value = prefill.timeSec || "";
+
+        perHand.checked = !!prefill.perHand;
+
+        setModalModeByImpl(impl);
+        fillLastHint(prefill.ejercicio || "");
       }else{
         EDITING_ID = null;
         title.textContent = "REGISTRAR SERIE";
-        document.getElementById("mEjercicio").value = ejercicio || "";
-        document.getElementById("mImplement").value = inferImplementFromName(ejercicio || "");
+
+        const ex = ejercicio || "";
+        document.getElementById("mEjercicio").value = ex;
+
+        let impl = "barra";
+        if(hintImpl && hintImpl !== "auto") impl = hintImpl;
+        else impl = guessImplementFromText(ex);
+
+        implSelect.value = impl;
+
         document.getElementById("mPeso").value = "";
         document.getElementById("mReps").value = "";
-        document.getElementById("mSerie").value = "1";
+        document.getElementById("mSerie2").value = "1";
         document.getElementById("mRpe").value = "";
-      }
 
-      updateImplementHint();
+        document.getElementById("mTimeSec").value = "45";
+        perHand.checked = (impl === "mancuernas"); // por defecto sí, lo puedes desmarcar
+
+        setModalModeByImpl(impl);
+        fillLastHint(ex);
+      }
 
       modal.classList.add("show");
       modal.setAttribute("aria-hidden","false");
@@ -997,15 +1136,13 @@
       const close = document.getElementById("modalClose");
       const cancel = document.getElementById("modalCancel");
       const save = document.getElementById("modalSave");
+      const saveRepeat = document.getElementById("modalSaveRepeat");
       const backdrop = document.getElementById("modal");
-      const implSel = document.getElementById("mImplement");
+      const impl = document.getElementById("mImpl");
+      const exInput = document.getElementById("mEjercicio");
 
       close.onclick = cerrarModalSerie;
       cancel.onclick = cerrarModalSerie;
-
-      if(implSel){
-        implSel.addEventListener("change", updateImplementHint);
-      }
 
       backdrop.addEventListener("click", (e)=>{
         if(e.target === backdrop) cerrarModalSerie();
@@ -1017,39 +1154,126 @@
         }
       });
 
-      save.onclick = ()=>{
+      impl.addEventListener("change", ()=>{
+        setModalModeByImpl(impl.value);
+      });
+
+      exInput.addEventListener("input", ()=>{
+        // si el usuario cambia el nombre, actualiza último
+        fillLastHint(exInput.value);
+      });
+
+      function doSave({repeat}){
         const ejercicio = document.getElementById("mEjercicio").value.trim();
-        const implement = document.getElementById("mImplement").value;
-        const peso = document.getElementById("mPeso").value;
-        const reps = document.getElementById("mReps").value;
-        const serie = document.getElementById("mSerie").value;
+        const implVal = document.getElementById("mImpl").value;
         const rpe = document.getElementById("mRpe").value;
 
-        if(!ejercicio || !reps || !serie){
-          showToast("⚠️ Completa: ejercicio, reps/seg y serie");
-          return;
-        }
-
-        // Validación peso: obligatorio salvo time/bodyweight/machine? (machine suele llevar, pero lo dejamos opcional)
-        const impl = implement || inferImplementFromName(ejercicio);
-        if((impl === "barbell" || impl === "dumbbell") && String(peso).trim() === ""){
-          showToast("⚠️ Falta el peso (kg) para barra/mancuernas");
+        if(!ejercicio){
+          showToast("⚠️ Escribe el ejercicio");
           return;
         }
 
         const w = workoutToday();
         const pid = getActivePhaseId();
-        const log = readLog(); // solo fase activa
+        const log = readLog();
+
+        // Guardado según modo
+        if(implVal === "tiempo"){
+          const timeSec = document.getElementById("mTimeSec").value;
+          const serie = document.getElementById("mSerie").value;
+
+          if(!timeSec || !serie){
+            showToast("⚠️ Completa: tiempo y serie");
+            return;
+          }
+
+          if(EDITING_ID){
+            const idx = log.findIndex(x => x.id === EDITING_ID);
+            if(idx >= 0){
+              const prev = log[idx];
+              log[idx] = {
+                ...prev,
+                ejercicio,
+                impl: "tiempo",
+                timeSec: String(timeSec),
+                serie: String(serie),
+                rpe: rpe || "",
+                // limpiar peso/reps
+                peso: "",
+                reps: ""
+              };
+              writeLogForActivePhase(log);
+              cerrarModalSerie();
+              refreshAfterSave("✅ Serie editada");
+              return;
+            }
+          }
+
+          const item = {
+            id: uid(),
+            ts: Date.now(),
+            date: w.date,
+            day: w.key,
+            dayName: w.name,
+            ejercicio,
+            impl: "tiempo",
+            timeSec: String(timeSec),
+            serie: String(serie),
+            rpe: rpe || "",
+            peso: "",
+            reps: "",
+            perHand: false,
+            phaseId: pid
+          };
+
+          log.unshift(item);
+          writeLogForActivePhase(log);
+
+          if(!repeat){
+            cerrarModalSerie();
+          }else{
+            // repetir: sube serie +1
+            const nextSerie = Math.max(1, parseInt(serie,10)||1) + 1;
+            document.getElementById("mSerie").value = String(nextSerie);
+          }
+
+          refreshAfterSave("✅ Serie guardada");
+          fillLastHint(ejercicio);
+          return;
+        }
+
+        // Modo peso/reps
+        const peso = document.getElementById("mPeso").value;
+        const reps = document.getElementById("mReps").value;
+        const serie = document.getElementById("mSerie2").value;
+        const perHand = document.getElementById("mPerHand").checked;
+
+        if(!reps || !serie){
+          showToast("⚠️ Completa: reps y serie");
+          return;
+        }
+        // peso puede ser vacío si quieres registrar sin peso (por ejemplo, dominadas),
+        // pero si es barra/máquina normalmente mejor ponerlo.
+        // Lo dejamos permitido.
 
         if(EDITING_ID){
           const idx = log.findIndex(x => x.id === EDITING_ID);
           if(idx >= 0){
             const prev = log[idx];
-            log[idx] = { ...prev, ejercicio, implement: impl, peso: peso || "", reps: reps || "", serie: serie || "", rpe: rpe || "" };
+            log[idx] = {
+              ...prev,
+              ejercicio,
+              impl: implVal,
+              peso: peso || "",
+              reps: String(reps),
+              serie: String(serie),
+              rpe: rpe || "",
+              perHand: (implVal==="mancuernas") ? !!perHand : false,
+              timeSec: ""
+            };
             writeLogForActivePhase(log);
             cerrarModalSerie();
-            renderLog(); renderNivel(); renderStats(); renderCalendar();
-            showToast("✅ Serie editada");
+            refreshAfterSave("✅ Serie editada");
             return;
           }
         }
@@ -1061,27 +1285,55 @@
           day: w.key,
           dayName: w.name,
           ejercicio,
-          implement: impl,
+          impl: implVal,
           peso: peso || "",
-          reps: reps || "",
-          serie: serie || "",
+          reps: String(reps),
+          serie: String(serie),
           rpe: rpe || "",
+          perHand: (implVal==="mancuernas") ? !!perHand : false,
+          timeSec: "",
           phaseId: pid
         };
 
         log.unshift(item);
         writeLogForActivePhase(log);
 
-        cerrarModalSerie();
-        renderLog(); renderNivel(); renderStats(); renderCalendar();
-        showToast("✅ Serie guardada");
-      };
+        if(!repeat){
+          cerrarModalSerie();
+        }else{
+          // repetir: aumenta serie y deja el ejercicio
+          const nextSerie = Math.max(1, parseInt(serie,10)||1) + 1;
+          document.getElementById("mSerie2").value = String(nextSerie);
+          // dejar reps/peso para repetir rápido (modo gym)
+          document.getElementById("mReps").focus();
+          document.getElementById("mReps").select?.();
+        }
+
+        refreshAfterSave("✅ Serie guardada");
+        fillLastHint(ejercicio);
+      }
+
+      save.onclick = ()=> doSave({repeat:false});
+      saveRepeat.onclick = ()=> doSave({repeat:true});
+    }
+
+    function refreshAfterSave(msg){
+      showToast(msg);
+      renderWorkoutToday();
+      renderLog();
+      renderNivel();
+      renderStats();
+      renderCalendar();
+      renderReminder();
     }
 
     function registrarSerie(){ abrirModalSerie(""); }
     function registrarSerieDesdeEntreno(){
       const ex = (document.getElementById("quickExercise")?.value || "").trim();
       abrirModalSerie(ex);
+    }
+    function registrarSeriePrefill(ex, hintImpl){
+      abrirModalSerie(ex, hintImpl || "auto");
     }
 
     /* =========================
@@ -1101,16 +1353,22 @@
         div.className = "log-card";
 
         const time = new Date(it.ts).toLocaleString();
-        const impl = it.implement || inferImplementFromName(it.ejercicio);
-        const implTxt = IMPLEMENT_LABEL[impl] ? ` · ${IMPLEMENT_LABEL[impl]}` : "";
         const line1 = `${it.dayName || it.day || ""}`;
-        const line2 = `📅 ${it.date || ""} · ${time}${implTxt}`;
+        const line2 = `📅 ${it.date || ""} · ${time}`;
         const line3 = `${it.ejercicio || ""}`;
 
-        const repsLabel = (impl === "time") ? "seg" : "reps";
-        const line4 =
-          `Serie ${it.serie || "-"} · ${displayWeight(it)} · ${it.reps || "-"} ${repsLabel}` +
-          (it.rpe ? ` · RPE ${it.rpe}` : "");
+        let line4 = "";
+        const impl = it.impl || "barra";
+        if(impl === "tiempo"){
+          const sec = it.timeSec || it.reps || "";
+          line4 = `Tiempo ${sec || "-"}s · Serie ${it.serie || "-"}` + (it.rpe ? ` · RPE ${it.rpe}` : "");
+        }else{
+          const per = (impl==="mancuernas" && it.perHand) ? " (por mano)" : "";
+          line4 =
+            `Serie ${it.serie || "-"} · ${it.peso || "-"} kg${per} · ${it.reps || "-"} reps` +
+            (it.rpe ? ` · RPE ${it.rpe}` : "") +
+            ` · ${impl}`;
+        }
 
         div.textContent = `${line1}\n${line2}\n${line3}\n${line4}`;
 
@@ -1120,7 +1378,7 @@
         const editBtn = document.createElement("button");
         editBtn.className = "mini";
         editBtn.textContent = "Editar ✏️";
-        editBtn.onclick = ()=> abrirModalSerie("", it);
+        editBtn.onclick = ()=> abrirModalSerie("", "auto", it);
 
         const delBtn = document.createElement("button");
         delBtn.className = "mini danger";
@@ -1141,19 +1399,19 @@
     function borrarSerie(id){
       const log = readLog();
       writeLogForActivePhase(log.filter(x => x.id !== id));
-      renderLog(); renderNivel(); renderStats(); renderCalendar();
+      renderLog(); renderNivel(); renderStats(); renderCalendar(); renderReminder();
       showToast("🗑️ Serie borrada");
     }
 
     function borrarHistorial(){
       if(!confirm("¿Borrar TODO el historial de la fase activa?")) return;
       writeLogForActivePhase([]);
-      renderLog(); renderNivel(); renderStats(); renderCalendar();
+      renderLog(); renderNivel(); renderStats(); renderCalendar(); renderReminder();
       showToast("🗑️ Historial borrado (fase)");
     }
 
     /* =========================
-       CSV (incluye implemento y peso efectivo)
+       CSV
     ========================= */
     function csvEscape(v){
       const s = String(v ?? "");
@@ -1163,28 +1421,25 @@
 
     function exportarCSV(){
       const log = readLog();
-      const header = ["fecha","dia_key","dia_nombre","ejercicio","implemento","serie","peso_kg","peso_efectivo_kg","reps","rpe","timestamp","id","fase"];
+      const header = ["fecha","dia_key","dia_nombre","ejercicio","serie","impl","peso_kg","per_mano","reps","tiempo_s","rpe","timestamp","id","fase"];
       const phaseName = getActivePhase().name;
 
-      const rows = log.map(it => {
-        const impl = it.implement || inferImplementFromName(it.ejercicio);
-        const eff = effectiveWeightKg(it);
-        return ([
-          it.date || "",
-          it.day || "",
-          it.dayName || "",
-          it.ejercicio || "",
-          impl || "",
-          it.serie || "",
-          it.peso || "",
-          Number.isFinite(eff) ? String(Math.round(eff*10)/10) : "",
-          it.reps || "",
-          it.rpe || "",
-          it.ts ? new Date(it.ts).toISOString() : "",
-          it.id || "",
-          phaseName
-        ]);
-      });
+      const rows = log.map(it => ([
+        it.date || "",
+        it.day || "",
+        it.dayName || "",
+        it.ejercicio || "",
+        it.serie || "",
+        it.impl || "",
+        it.peso || "",
+        it.perHand ? "1" : "0",
+        it.reps || "",
+        it.timeSec || "",
+        it.rpe || "",
+        it.ts ? new Date(it.ts).toISOString() : "",
+        it.id || "",
+        phaseName
+      ]));
 
       const csv = header.join(",") + "\n" + rows.map(r => r.map(csvEscape).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -1201,25 +1456,29 @@
     }
 
     /* =========================
-       e1RM + STATS (usa peso efectivo)
+       e1RM + STATS
     ========================= */
-    function e1RM_Epley(item){
-      const impl = item.implement || inferImplementFromName(item.ejercicio);
-      const wEff = effectiveWeightKg(item);
-      const r = Math.floor(toNum(item.reps));
-      if(!Number.isFinite(wEff) || !Number.isFinite(r) || wEff <= 0 || r <= 0) return NaN;
+    function effectiveWeightForTonnage(it){
+      const w = toNum(it.peso);
+      if(!Number.isFinite(w) || w <= 0) return NaN;
+      const impl = it.impl || "barra";
+      if(impl === "mancuernas" && it.perHand) return w * 2; // por mano => total
+      return w;
+    }
 
-      // Si es tiempo, NO calculamos e1RM
-      if(impl === "time") return NaN;
-
+    function e1RM_Epley(weight, reps){
+      const w = Number(weight);
+      const r = Math.floor(Number(reps));
+      if(!Number.isFinite(w) || !Number.isFinite(r) || w <= 0 || r <= 0) return NaN;
       const rr = clamp(r, 1, 30);
-      return wEff * (1 + (rr / 30));
+      return w * (1 + (rr / 30));
     }
 
     function withinLastDays(ts, days){
       const ms = days * 24 * 60 * 60 * 1000;
       return (Date.now() - ts) <= ms;
     }
+
     function fmtKg(n){
       if(!Number.isFinite(n)) return "-";
       const v = Math.round(n * 10) / 10;
@@ -1242,37 +1501,45 @@
         if(is28) series28++;
         if(is7) series7++;
 
-        const impl = s.implement || inferImplementFromName(s.ejercicio);
-        const reps = toNum(s.reps);
+        const impl = s.impl || "barra";
+        const r = toNum(s.reps);
+        const wEff = effectiveWeightForTonnage(s);
 
-        // tonelaje solo si hay reps y peso efectivo
-        const wEff = effectiveWeightKg(s);
-        if(is28){
-          const ex = (s.ejercicio || "Sin nombre").trim();
-          const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
-          cur.sets += 1;
-          byExercise28.set(ex, cur);
-        }
+        if(impl !== "tiempo"){
+          if(Number.isFinite(wEff) && Number.isFinite(r) && wEff > 0 && r > 0){
+            const t = wEff * r;
+            if(is28) tonnage28 += t;
+            if(is7)  tonnage7 += t;
 
-        if(Number.isFinite(wEff) && Number.isFinite(reps) && wEff > 0 && reps > 0 && impl !== "time"){
-          const t = wEff * reps;
-          if(is28) tonnage28 += t;
-          if(is7)  tonnage7 += t;
+            if(is28){
+              const ex = (s.ejercicio || "Sin nombre").trim();
+              const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
+              cur.sets += 1;
+              cur.tonnage += t;
+              byExercise28.set(ex, cur);
+            }
 
+            const exKey = (s.ejercicio || "Sin nombre").trim();
+            const e1 = e1RM_Epley(wEff, r);
+            if(Number.isFinite(e1)){
+              const prev = prByExercise.get(exKey);
+              if(!prev || e1 > prev.e1rm){
+                prByExercise.set(exKey, { e1rm: e1, w: wEff, r, date: s.date || "", ts });
+              }
+            }
+          }else if(is28){
+            const ex = (s.ejercicio || "Sin nombre").trim();
+            const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
+            cur.sets += 1;
+            byExercise28.set(ex, cur);
+          }
+        }else{
+          // tiempo: cuenta series pero no tonelaje
           if(is28){
             const ex = (s.ejercicio || "Sin nombre").trim();
             const cur = byExercise28.get(ex) || { sets:0, tonnage:0 };
-            cur.tonnage += t;
+            cur.sets += 1;
             byExercise28.set(ex, cur);
-          }
-
-          const exKey = (s.ejercicio || "Sin nombre").trim();
-          const e1 = e1RM_Epley(s);
-          if(Number.isFinite(e1)){
-            const prev = prByExercise.get(exKey);
-            if(!prev || e1 > prev.e1rm){
-              prByExercise.set(exKey, { e1rm: e1, item: s });
-            }
           }
         }
       }
@@ -1283,7 +1550,7 @@
         .slice(0, 10);
 
       const prs = [...prByExercise.entries()]
-        .map(([ex, v]) => ({ ex, e1rm: v.e1rm, item: v.item }))
+        .map(([ex, v]) => ({ ex, ...v }))
         .sort((a,b) => b.e1rm - a.e1rm)
         .slice(0, 12);
 
@@ -1319,26 +1586,19 @@
       `;
 
       if(s.prs.length === 0){
-        prBox.innerHTML = `<div class="log-meta">Aún no hay PRs (necesitas peso y reps; en “tiempo” no aplica).</div>`;
+        prBox.innerHTML = `<div class="log-meta">Aún no hay PRs. Registra series con peso y reps.</div>`;
       }else{
         prBox.innerHTML = `
           <table class="table">
             <thead><tr><th>Ejercicio</th><th>e1RM</th><th>Mejor serie</th></tr></thead>
             <tbody>
-              ${s.prs.map(p => {
-                const it = p.item;
-                const impl = it.implement || inferImplementFromName(it.ejercicio);
-                const label = impl === "dumbbell" ? " (DB x2)" : "";
-                const wDisp = displayWeight(it);
-                const reps = it.reps || "-";
-                return `
-                  <tr>
-                    <td>${p.ex}${label}</td>
-                    <td><span class="pill">${fmtKg(p.e1rm)} kg</span></td>
-                    <td class="muted">${wDisp} × ${reps} (${it.date || ""})</td>
-                  </tr>
-                `;
-              }).join("")}
+              ${s.prs.map(p => `
+                <tr>
+                  <td>${p.ex}</td>
+                  <td><span class="pill">${fmtKg(p.e1rm)} kg</span></td>
+                  <td class="muted">${fmtKg(p.w)}×${p.r} (${p.date || ""})</td>
+                </tr>
+              `).join("")}
             </tbody>
           </table>
         `;
@@ -1372,7 +1632,6 @@
       if(e.includes("cuello") || e.includes("neck")) return "cuello";
       return null;
     }
-
     function weekKeyFromISODate(isoDate){
       const d = new Date(isoDate + "T00:00:00");
       const monday = startOfWeekISO(d);
@@ -1430,11 +1689,9 @@
         if(!k) return;
         pr[k].sets += 1;
 
-        const impl = s.implement || inferImplementFromName(s.ejercicio);
-        if(impl === "time") return;
-
+        if((s.impl || "") === "tiempo") return;
         const r = toNum(s.reps);
-        const wEff = effectiveWeightKg(s);
+        const wEff = effectiveWeightForTonnage(s);
         if(Number.isFinite(wEff) && Number.isFinite(r) && wEff>0 && r>0) pr[k].ton += (wEff*r);
       });
 
@@ -1449,17 +1706,16 @@
         </table>
       `;
 
-      const map = new Map(); // weekKey -> {sets, ton}
+      const map = new Map();
       log.forEach(s=>{
         if(!s.date) return;
         const wk = weekKeyFromISODate(s.date);
         const cur = map.get(wk) || { sets:0, ton:0 };
         cur.sets += 1;
 
-        const impl = s.implement || inferImplementFromName(s.ejercicio);
-        if(impl !== "time"){
+        if((s.impl||"") !== "tiempo"){
           const r = toNum(s.reps);
-          const wEff = effectiveWeightKg(s);
+          const wEff = effectiveWeightForTonnage(s);
           if(Number.isFinite(wEff) && Number.isFinite(r) && wEff>0 && r>0) cur.ton += wEff*r;
         }
         map.set(wk, cur);
@@ -1540,7 +1796,7 @@
         }).join(" ");
         return `
           <div class="log-card">
-            <div style="font-weight:800;">Semana ${fmtShort(iso(wStart))}</div>
+            <div style="font-weight:900;">Semana ${fmtShort(iso(wStart))}</div>
             <div class="log-meta" style="margin-top:6px;">${line}</div>
           </div>
         `;
@@ -1603,11 +1859,11 @@
     }
 
     /* =========================
-       BACKUP / RESTORE (JSON)
+       BACKUP / RESTORE
     ========================= */
     function exportarBackup(){
       const payload = {
-        schema: "entrenoapp-backup-v1",
+        schema: "entreno-backup-v1",
         exportedAt: new Date().toISOString(),
         appVersion: APP_VERSION,
         cacheVersion: CACHE_VERSION,
@@ -1647,7 +1903,7 @@
         showToast("⚠️ JSON inválido");
         return;
       }
-      if(!obj || obj.schema !== "entrenoapp-backup-v1" || !obj.data){
+      if(!obj || obj.schema !== "entreno-backup-v1" || !obj.data){
         showToast("⚠️ Backup no reconocido");
         return;
       }
@@ -1672,6 +1928,7 @@
       renderStats();
       renderCalendar();
       refreshPwaStatus();
+      renderReminder();
     }
 
     /* =========================
@@ -1682,13 +1939,13 @@
       if(!el) return;
 
       if(!("serviceWorker" in navigator)){
-        el.textContent = "Estado: Service Worker NO disponible en este navegador.";
+        el.textContent = "Estado: Service Worker NO disponible.";
         return;
       }
 
       const reg = await navigator.serviceWorker.getRegistration();
       if(!reg){
-        el.textContent = "Estado: Service Worker NO registrado aún (abre por HTTPS o localhost).";
+        el.textContent = "Estado: SW no registrado aún.";
         return;
       }
 
@@ -1703,19 +1960,18 @@
 
     async function actualizarApp(){
       if(!("serviceWorker" in navigator)){
-        showToast("⚠️ No hay Service Worker en este navegador");
+        showToast("⚠️ No hay Service Worker");
         return;
       }
 
       const reg = await navigator.serviceWorker.getRegistration();
       if(!reg){
-        showToast("⚠️ SW no registrado. Usa HTTPS o localhost.");
+        showToast("⚠️ SW no registrado");
         return;
       }
 
       try{
         await reg.update();
-
         if(reg.waiting){
           reg.waiting.postMessage({ type: "SKIP_WAITING" });
           showToast("🔄 Actualizando…");
@@ -1750,6 +2006,7 @@
        INIT
     ========================= */
     document.addEventListener("DOMContentLoaded", ()=>{
+      // asegurar fases
       const phases = readPhases();
       writePhases(phases);
       setActivePhase(getActivePhaseId());
@@ -1757,6 +2014,7 @@
       migrateLogIfNeeded();
       bindModal();
 
+      // bind import
       const inp = document.getElementById("importFile");
       if(inp){
         inp.addEventListener("change", async (e)=>{
@@ -1775,6 +2033,5 @@
       renderReminder();
     });
   </script>
-
 </body>
 </html>
